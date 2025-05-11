@@ -8,28 +8,37 @@ export default function Header() {
 
     return (<>
         <nav className="flex justify-between items-center px-6 py-4 mx-10">
-            <div className="text-2xl font-bold">
+            <Link href='/' className="text-2xl font-bold">
                 Planmefy
-            </div>
-            <div className="flex gap-5">
-                <div>
+            </Link>
+            <div className="flex items-center gap-5">
+                <div className="flex items-center gap-2">
                     {session ? (
-                        <div className="flex gap-2">
-                            <p>Welcome, {session.user?.name}</p>
-                            <button onClick={() => signOut()} className="material-symbols-outlined text-3xl">
+                        <button
+                            onClick={() => signOut()}
+                            className="flex items-center text-sm font-medium text-blue-300 hover:text-blue-100 transition duration-200"
+                        >
+                            <span className="material-symbols-outlined text-3xl ml-2">
                                 account_circle_off
-                            </button>
-                        </div>
+                            </span>
+                        </button>
                     ) : (
-                        <button onClick={() => signIn('google')} className="material-symbols-outlined text-3xl">
-                            person
-                        </button>)}
+                        <button
+                            onClick={() => signIn('google')}
+                            className="flex items-center text-sm font-medium text-blue-300 hover:text-blue-100 transition duration-200"
+                        >
+                            <span className="material-symbols-outlined text-3xl ml-1">
+                                person
+                            </span>
+                        </button>
+                    )}
                 </div>
 
-                <Link href="" className="material-symbols-outlined text-3xl">
+                <Link replace={false} href="/feedback" className="material-symbols-outlined text-3xl text-gray-300 hover:text-white transition duration-200">
                     help
                 </Link>
             </div>
         </nav>
+
     </>)
 }
