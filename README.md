@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌤️ Planmefy
 
-## Getting Started
+**Planmefy** is a smart daily planner built with **Next.js**, designed to help users manage their schedule while staying informed about the weather. With a sleek animated UI and Google OAuth, Planmefy provides a seamless, stylish, and intuitive experience.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🧠 Inspiration
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Planmefy was born out of the idea to combine planning with live weather data to help users make smarter day-to-day decisions — all wrapped in a fast and beautiful web experience.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## 🎯 Why This Project?
 
-To learn more about Next.js, take a look at the following resources:
+I'm building **Planmefy** to push my skills in **Next.js**, **TypeScript**, and both **front-end and back-end development**.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This project is like an **exam** for myself — something I’m creating entirely on my own, **independent of tutorials or courses**, from idea to implementation. I want to develop a real product with real features, not just a sandbox project.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+More than code, I want to give this project **life and personality**, something that reflects **my passion, creativity, and dedication**. It’s also a way to **prove to myself** (and potential employers) that I’m ready to work as a **Junior Fullstack Developer**.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## ✨ Features
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 📆 **Interactive Calendar** — Navigate days and view plans in a clean layout.
+- ✍️ **Add & Manage Events** — Easily create, update, and delete daily plans.
+- 🔐 **Google Authentication** — Secure login with Google using Lucia.
+- 🌤️ **Weather Integration** — Automatically fetches weather based on your location and date.
+- 🎨 **Animated Transitions** — Smooth calendar-to-form transitions for a modern UX.
+
+---
+
+## 🧪 Tech Stack
+
+- [Next.js](https://nextjs.org/) (App Router)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Lucia Auth](https://lucia-auth.com/) for authentication
+- [OpenWeather API](https://openweathermap.org/api) for weather data
+- [Framer Motion](https://www.framer.com/motion/) for animations
+- [MongoDB](https://www.mongodb.com) to store data
+
+---
+
+## 📬 Postscriptum
+
+Hoping everything goes out well. I am welcoming all critics, recommendations, or any feedback.  
+Thank you for checking this out!
+
+
