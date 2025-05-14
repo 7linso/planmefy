@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { signIn, signOut, useSession } from "next-auth/react";
+import ThemeToggler from "./theme-toggler";
 
 export default function Header() {
     const { data: session } = useSession();
@@ -11,12 +12,13 @@ export default function Header() {
             <Link href='/' className="text-2xl font-bold">
                 Planmefy
             </Link>
+            <ThemeToggler />
             <div className="flex items-center gap-5">
                 <div className="flex items-center gap-2">
                     {session ? (
                         <button
                             onClick={() => signOut()}
-                            className="flex items-center text-sm font-medium text-blue-300 hover:text-blue-100 transition duration-200"
+                            className="flex items-center text-sm font-medium text-blue-300 dark:hover:text-blue-100 hover:text-blue-400 transition duration-200"
                         >
                             <span className="material-symbols-outlined text-3xl ml-2">
                                 account_circle_off
@@ -25,7 +27,7 @@ export default function Header() {
                     ) : (
                         <button
                             onClick={() => signIn('google')}
-                            className="flex items-center text-sm font-medium text-blue-300 hover:text-blue-100 transition duration-200"
+                                className="flex items-center text-sm font-medium text-blue-300 dark:hover:text-blue-100 hover:text-blue-400 transition duration-200"
                         >
                             <span className="material-symbols-outlined text-3xl ml-1">
                                 person
@@ -33,7 +35,8 @@ export default function Header() {
                         </button>
                     )}
                 </div>
-                <Link replace={false} href="/feedback" className="material-symbols-outlined text-3xl text-gray-300 hover:text-white transition duration-200">
+                <Link replace={false} href="/feedback"
+                    className="material-symbols-outlined text-3xl text-gray-400 dark:hover:text-white hover:text-gray-700 transition duration-200">
                     help
                 </Link>
             </div>

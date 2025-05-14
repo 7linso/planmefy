@@ -9,7 +9,6 @@ export default function Home() {
       <Calendar />
       <PlansForm/>
     </div>
-    
   </>
   );
 }

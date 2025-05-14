@@ -11,7 +11,7 @@ const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export default function CalendarGrid({ days, padding, selectedDate, setSelectedDate }: CalendarGridProps) {
     return (
         <>
-            <div className="grid grid-cols-7 text-center text-sm font-medium text-gray-600 mb-2">
+            <div className="grid grid-cols-7 auto-rows-fr text-center text-sm font-medium text-gray-500 mb-2">
                 {weekdayLabels.map((label, i) => (
                     <div key={i}>{label}</div>
                 ))}
@@ -25,6 +25,5 @@ export default function CalendarGrid({ days, padding, selectedDate, setSelectedD
                 ))}
             </div>
         </>
-
     )
 }
