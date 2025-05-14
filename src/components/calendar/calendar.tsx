@@ -5,6 +5,7 @@ import CalendarGrid from './calendar-grid';
 
 export default function CustomCalendar() {
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(currentDate)
 
     const goToPrevMonth = () => {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -20,14 +21,14 @@ export default function CustomCalendar() {
     const yearLabel = actions.getYearLabel(currentDate)
 
     return (
-        <div className="max-w-md mx-auto border rounded-xl shadow p-4">
+        <div className="border rounded-xl shadow p-4 m-10">
             <div className="flex justify-between items-center mb-4">
                 <button onClick={goToPrevMonth} className="text-lg">{'←'}</button>
                 <h2 className="text-xl font-bold">{monthLabel} {yearLabel}</h2>
                 <button onClick={goToNextMonth} className="text-lg">{'→'}</button>
             </div>
             
-            <CalendarGrid days={days} padding={padding}/>
+            <CalendarGrid days={days} padding={padding} selectedDate={selectedDate} setSelectedDate={setSelectedDate}/>
         </div>
     );
 }

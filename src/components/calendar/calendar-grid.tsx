@@ -2,11 +2,13 @@ import CalendarSell from "./calendar-sell";
 
 interface CalendarGridProps {
     days: Date[],
-    padding: number
+    padding: number,
+    selectedDate: Date, 
+    setSelectedDate: React.Dispatch<React.SetStateAction<Date>>
 }
 const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function CalendarGrid({ days, padding }: CalendarGridProps) {
+export default function CalendarGrid({ days, padding, selectedDate, setSelectedDate }: CalendarGridProps) {
     return (
         <>
             <div className="grid grid-cols-7 text-center text-sm font-medium text-gray-600 mb-2">
@@ -19,7 +21,7 @@ export default function CalendarGrid({ days, padding }: CalendarGridProps) {
                     <div key={`pad-${i}`} />
                 ))}
                 {days.map((day, i) => (
-                    <CalendarSell day={day} key={i}/>
+                    <CalendarSell day={day} key={i} selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
                 ))}
             </div>
         </>

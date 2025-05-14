@@ -33,7 +33,6 @@ export default function Header() {
                         </button>
                     )}
                 </div>
-
                 <Link replace={false} href="/feedback" className="material-symbols-outlined text-3xl text-gray-300 hover:text-white transition duration-200">
                     help
                 </Link>
