@@ -1,52 +1,21 @@
-// src/components/plans/PlansList.tsx
-"use client";
+import * as actions from '@/lib/actions'
+import Link from 'next/link';
 
-import { useEffect, useState } from "react";
-
-type Plan = {
-    _id: string;
-    title: string;
-    note?: string;
-    created_at: string;
-};
-
-export default function PlansDisplay() {
-    const [plans, setPlans] = useState<Plan[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchPlans = async () => {
-            try {
-                const res = await fetch("/api/post-plan", {
-                    method: "GET",
-                });
-
-                if (!res.ok) throw new Error("Failed to fetch plans");
-
-                const data = await res.json();
-                setPlans(data.plans);
-            } catch (err) {
-                console.error("❌ Error loading plans:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchPlans();
-    }, []);
-
-    if (loading) return <p>Loading plans...</p>;
-    if (!plans.length) return <p>No plans yet.</p>;
-
-    return (
-        <ul>
-            {plans.map((plan) => (
-                <li key={plan._id}>
-                    <strong>{plan.title}</strong>
-                    <p>{plan.note}</p>
-                    <small>{new Date(plan.created_at).toLocaleString()}</small>
-                </li>
-            ))}
-        </ul>
-    );
+export default async function PlansDisplay() {
+    const userPlans = await actions.getUserPlans()
+    return (<>
+        <div className='p-5'>
+            <h1 className='mb-3 font-semibold text-xl'>My Plans: </h1>
+            <ul className='text-sm'>
+                {userPlans.map((userPlans) => (
+                    <li key={userPlans._id.toString()}>
+                        <strong>{userPlans.title}</strong>
+                        <p>{userPlans.note}</p>
+                        <small>{new Date(userPlans.created_at).toLocaleString()}</small>
+                    </li>
+                ))}
+            </ul>
+            <Link href='/create-plan'>Add Plan</Link>
+        </div>
+    </>);
 }

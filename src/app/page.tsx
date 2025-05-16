@@ -7,7 +7,6 @@ export default function Home() {
     <div className="flex grid grid-cols-2 gap-5">
       <PlansDisplay />
       <Calendar />
-      <PlansForm/>
     </div>
   </>
   );

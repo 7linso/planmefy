@@ -11,7 +11,7 @@ declare global {
 }
 
 if (!process.env.MONGODB_URI) {
-    throw new Error("Please check your Mongo credentials");
+    throw new Error("Please check your MongoDB credentials");
 }
 
 if (process.env.NODE_ENV === "development") {
