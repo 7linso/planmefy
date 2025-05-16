@@ -18,11 +18,10 @@ export default function PlansForm() {
             },
             body: JSON.stringify({ ...form, userId: '1' })
         })
-        const text = await res.text();
-        console.log("🪵 Raw response:", text);
+        const data = await res.text();
+        console.log("Raw response:", data);
     }
 
-    console.log(form)
     return (
         <form className="m-10" onSubmit={handleSubmit}>
             <div className="mb-4">
@@ -44,7 +43,9 @@ export default function PlansForm() {
                     onChange={handleChange}
                 />
             </div>
-            <button type="submit">Submit</button>
+            <button type="submit" className="p-2 rounded-md border">
+                Submit
+            </button>
         </form>
     );
 }

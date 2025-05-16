@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { planSchema } from '@/schemas';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../auth/[...nextauth]/route';
 
 export async function POST(req: NextRequest) {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user?.id)
+        return NextResponse.json(
+            { error: 'Not Authenticated' },
+            { status: 400 }
+        )
     try {
         const body = await req.json();
 
@@ -14,7 +22,8 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { userId, title, note } = parseValidatedData.data;
+        const { title, note } = parseValidatedData.data;
+        const userId = session.user.id
 
         const client = await clientPromise;
         const db = client.db('test');
@@ -27,7 +36,31 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ message: 'Plan Saved', id: result.insertedId });
     } catch (err) {
-        console.error('❌ Error saving plan:', err);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        console.error('Error saving plan:', err)
+        return NextResponse.json(
+            { error: 'Internal Server Error' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function GET(req: NextRequest) {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user)
+        return NextResponse.json(
+            { error: 'Not Authenticated' },
+            { status: 400 }
+        )
+    try {
+        const client = await clientPromise
+        const db = client.db('test')
+        const result = await db.collection('plans').find({ userId: session.user.id }).toArray()
+        return NextResponse.json({ plans: result })
+    } catch (err) {
+        console.error('Error getting plans', err)
+        return NextResponse.json(
+            { error: 'Internal Server Error' },
+            { status: 500 }
+        )
     }
 }
