@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { signIn, signOut, useSession } from "next-auth/react";
-import ThemeToggler from "./theme-toggler";
+import ThemeToggler from "./general-components/theme-toggler";
 
 export default function Header() {
     const { data: session } = useSession();

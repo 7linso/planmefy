@@ -1,21 +1,50 @@
 import * as actions from '@/lib/actions'
 import Link from 'next/link';
+import DeleteButton from '../general-components/delete-button';
 
 export default async function PlansDisplay() {
     const userPlans = await actions.getUserPlans()
     return (<>
-        <div className='p-5'>
-            <h1 className='mb-3 font-semibold text-xl'>My Plans: </h1>
-            <ul className='text-sm'>
+        <div className="p-5">
+            <div className="flex items-center justify-between mb-4">
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                    My Plans
+                </h1>
+                <Link
+                    href="/create-plan"
+                    className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                >
+                    + Add Plan
+                </Link>
+            </div>
+
+            <ul className="space-y-4">
                 {userPlans.map((userPlans) => (
-                    <li key={userPlans._id.toString()}>
-                        <strong>{userPlans.title}</strong>
-                        <p>{userPlans.note}</p>
-                        <small>{new Date(userPlans.created_at).toLocaleString()}</small>
+                    <li
+                        key={userPlans._id.toString()}
+                        className="flex flex-col gap-2 p-4 rounded-xl border dark:border-gray-700 shadow-sm bg-white dark:bg-gray-900 transition-all duration-300 hover:shadow-md"
+                    >
+                        <div className="flex justify-between items-start">
+                            <strong className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                                {userPlans.title}
+                            </strong>
+                            
+                                <DeleteButton id={userPlans._id}/>
+                        </div>
+
+                        {userPlans.note && (
+                            <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                                {userPlans.note}
+                            </p>
+                        )}
+
+                        <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            {new Date(userPlans.created_at).toLocaleString()}
+                        </span>
                     </li>
                 ))}
             </ul>
-            <Link href='/create-plan'>Add Plan</Link>
         </div>
+
     </>);
 }

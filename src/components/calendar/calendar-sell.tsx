@@ -11,7 +11,7 @@ export default function CalendarSell({ day, selectedDate, setSelectedDate }: Cal
         <button
             onClick={() => setSelectedDate(day)}
             className={`aspect-square w-full p-2 rounded text-center cursor-pointer 
-                    transition-colors duration-200 border 
+                    transition-colors duration-200 border
                     hover:bg-gray-200 hover:text-black 
                     dark:hover:bg-gray-700 dark:hover:text-white
                     ${actions.isSameDate(day, selectedDate)
