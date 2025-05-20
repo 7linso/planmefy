@@ -2,7 +2,7 @@
 import clientPromise from "../mongodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { planSchema } from "@/schemas";
+import { planSchema } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ObjectId } from "mongodb";
