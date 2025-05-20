@@ -1,6 +1,11 @@
+import { getServerSession } from "next-auth"
 import Link from "next/link"
+import { authOptions } from "../api/auth/[...nextauth]/route"
 
-export default function LandingPage() {
+export default async function LandingPage() {
+    const session = await getServerSession(authOptions)
+    const href = (session) ? '/' : 'signin'
+
     return (<>
         <div className="flex items-center justify-center text-center min-h-[calc(100vh-4rem)]">
             <div className="flex flex-col w-full h-full p-6 mx-auto max-w-4xl">
@@ -12,7 +17,7 @@ export default function LandingPage() {
                         Create, manage, and share your personal plans with ease.
                     </p>
                     <Link
-                        href="/"
+                        href={href}
                         className="btn bg-white text-gray-900 px-6 py-3 text-lg font-semibold rounded shadow hover:bg-gray-200 transition"
                     >
                         Get Started
