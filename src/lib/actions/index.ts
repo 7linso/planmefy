@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ObjectId } from "mongodb";
 
-export async function getUserPlans() {
+export async function getAllUserPlans() {
     const session = await getServerSession(authOptions)
     if (!session || !session.user)
         throw new Error("Not authenticated")
@@ -26,6 +26,28 @@ export async function getUserPlans() {
         created_at: plan.created_at instanceof Date
             ? plan.created_at.toISOString()
             : new Date(plan.created_at).toISOString(), 
+    }))
+}
+
+export async function getUserPlansByDate() {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user)
+        throw new Error("Not authenticated")
+
+    const client = await clientPromise
+    const db = client.db('test')
+    const plans = await db.collection('plans')
+        .find({ userId: session.user.id })
+        .sort({ createdAt: -1 })
+        .toArray()
+    return plans.map((plan) => ({
+        _id: plan._id.toString(),
+        userId: plan.userId,
+        title: plan.title,
+        note: plan.note,
+        created_at: plan.created_at instanceof Date
+            ? plan.created_at.toISOString()
+            : new Date(plan.created_at).toISOString(),
     }))
 }
 

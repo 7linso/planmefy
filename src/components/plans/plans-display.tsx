@@ -3,7 +3,7 @@ import Link from 'next/link';
 import DeleteButton from '../general-components/delete-button';
 
 export default async function PlansDisplay() {
-    const userPlans = await actions.getUserPlans()
+    const userPlans = await actions.getAllUserPlans()
     return (<>
         <div className="p-5">
             <div className="flex items-center justify-between mb-4">

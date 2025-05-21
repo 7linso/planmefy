@@ -1,4 +1,4 @@
-import CalendarSell from "./calendar-sell";
+import CalendarSell from "./calendar-cell";
 
 interface CalendarGridProps {
     days: Date[],
