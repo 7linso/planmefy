@@ -21,7 +21,7 @@ export default function LoginPage() {
                 <p className="mb-6 text-gray-500">Sign in to continue</p>
 
                 <button
-                    onClick={() => signIn('google')}
+                    onClick={() => signIn('google', {callbackUrl: '/'})}
                     className="flex items-center justify-center gap-3 w-full px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-md shadow"
                 >
                     <Image
