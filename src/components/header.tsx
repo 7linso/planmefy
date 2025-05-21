@@ -2,9 +2,12 @@
 import Link from "next/link"
 import { signIn, signOut, useSession } from "next-auth/react";
 import ThemeToggler from "./general-components/theme-toggler";
+import { useRouter } from 'next/navigation'
 
 export default function Header() {
     const { data: session } = useSession();
+    const router = useRouter()
+
     return (<>
         <nav className="flex justify-between items-center px-6 py-4 mx-10 sticky top-0">
             <Link href='/' className="text-2xl font-bold">
@@ -16,7 +19,11 @@ export default function Header() {
                     {session ? (
                         <div className="relative group inline-block">
                             <button
-                                onClick={() => signOut()}
+                                onClick={() =>
+                                    signOut({ redirect: false }).then(() => {
+                                        router.push('/home')
+                                    })
+                                }
                                 className="flex items-center text-sm font-medium text-blue-300 dark:hover:text-blue-100 hover:text-blue-400 transition duration-200"
                             >
                                 <span className="material-symbols-outlined text-3xl ml-2">
@@ -34,7 +41,7 @@ export default function Header() {
                     ) : (
                         <div className="relative group inline-block">
                             <button
-                                onClick={() => signIn('google', {callbackUrl: '/'})}
+                                onClick={() => signIn('google', { callbackUrl: '/' })}
                                 className="flex items-center text-sm font-medium text-blue-300 dark:hover:text-blue-100 hover:text-blue-400 transition duration-200"
                             >
                                 <span className="material-symbols-outlined text-3xl ml-1">
