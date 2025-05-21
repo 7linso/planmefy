@@ -7,7 +7,7 @@ export default function Header() {
     const { data: session } = useSession();
     return (<>
         <nav className="flex justify-between items-center px-6 py-4 mx-10 sticky top-0">
-            <Link href='/home' className="text-2xl font-bold">
+            <Link href='/' className="text-2xl font-bold">
                 Planmefy
             </Link>
             <ThemeToggler />
