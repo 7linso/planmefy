@@ -1,16 +1,16 @@
 import * as actions from '@/components/calendar/calendar-utils'
+import { useSelectedDate } from '@/lib/store/selectedData'
 
 interface CalendarSellProps {
-    day: Date,
-    selectedDate: Date,
-    setSelectedDate: React.Dispatch<React.SetStateAction<Date>>
+    day: Date
 }
 
-export default function CalendarSell({ day, selectedDate, setSelectedDate }: CalendarSellProps) {
+export default function CalendarSell({ day }: CalendarSellProps) {
+    const {selectedDate, setSelectedDate} = useSelectedDate()
     return (<>
         <button
             onClick={() => setSelectedDate(day)}
-            className={`relative aspect-square w-full rounded cursor-pointer
+            className={`m-2 relative aspect-square w-full rounded cursor-pointer
                         transition-colors duration-200
                         border
                         hover:bg-gray-200 hover:text-black 

@@ -5,7 +5,6 @@ import CalendarGrid from './calendar-grid';
 
 export default function CustomCalendar() {
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedDate, setSelectedDate] = useState(currentDate)
 
     const goToPrevMonth = () => {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -28,7 +27,7 @@ export default function CustomCalendar() {
                 <button onClick={goToNextMonth} className="text-lg">{'→'}</button>
             </div>
             
-            <CalendarGrid days={days} padding={padding} selectedDate={selectedDate} setSelectedDate={setSelectedDate}/>
+            <CalendarGrid days={days} padding={padding}/>
         </div>
     );
 }
