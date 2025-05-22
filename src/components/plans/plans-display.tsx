@@ -4,6 +4,7 @@ import DeleteButton from '../general-components/delete-button';
 
 export default async function PlansDisplay() {
     const userPlans = await actions.getAllUserPlans()
+    console.log(userPlans)
     return (<>
         <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
@@ -14,29 +15,39 @@ export default async function PlansDisplay() {
                 + Add Plan
             </Link>
         </div>
-
         <ul className="space-y-4">
-            {userPlans.map((userPlans) => (
-                <li key={userPlans._id.toString()}
+            {userPlans.map((plan) => (
+                <li key={plan._id}
                     className="flex flex-col gap-2 p-4 rounded-xl border dark:border-gray-700 shadow-sm bg-white dark:bg-gray-900 transition-all duration-300 hover:shadow-md">
                     <div className="flex justify-between items-start">
                         <strong className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                            {userPlans.title}
+                            {plan.title}
                         </strong>
-                        <DeleteButton id={userPlans._id} />
+                        <DeleteButton id={plan._id} />
                     </div>
-
-                    {userPlans.note && (
-                        <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-                            {userPlans.note}
+                    <div className=" text-gray-500 dark:text-gray-400 space-y-1">
+                        <div>
+                            📅{" "}
+                            {plan.startDate}
+                            {plan.endDate && plan.endDate !== plan.startDate
+                                ? ` → ${plan.endDate}`
+                                : ""}
+                        </div>
+                        {plan.startTime && (
+                            <div>
+                                🕒 {plan.startTime}
+                                {plan.endTime ? ` → ${plan.endTime}` : ""}
+                            </div>
+                        )}
+                    </div>
+                    {plan.note && (
+                        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                            {plan.note}
                         </p>
                     )}
-
-                    <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        {new Date(userPlans.created_at).toLocaleString()}
-                    </span>
                 </li>
             ))}
         </ul>
+
     </>);
 }

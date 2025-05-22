@@ -4,13 +4,8 @@ import * as actions from '@/lib/actions'
 import { planSchema } from '@/lib/schemas'
 import { useSelectedDate } from '@/lib/store/selectedData'
 
-// interface PlansFormProps{
-//     selectedDate: Date,
-//     setSelectedDate: (date: Date) => void
-// }
-
 export default function PlansForm() {
-    const {selectedDate, setSelectedDate} = useSelectedDate()
+    const { selectedDate, setSelectedDate } = useSelectedDate()
     const formRef = useRef<HTMLFormElement>(null)
     const [errors, setErrors] = useState<{
         title?: string
@@ -24,16 +19,23 @@ export default function PlansForm() {
     const [showTime, setShowTime] = useState(false)
     const [showEndDate, setShowEndDate] = useState(false)
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        const formData = new FormData(e.currentTarget)
+
+        const form = formRef.current
+        if (!form) return
+        const formData = new FormData(form)
+
+        const safeString = (v: FormDataEntryValue | null) =>
+            typeof v === 'string' && v.trim() !== '' ? v : undefined
+
         const raw = {
             title: formData.get('title') as string,
-            note: formData.get('note') as string,
-            startDate: formData.get('startDate') as string,
-            endDate: formData.get('endDate') as string,
-            startTime: formData.get('startTime') as string,
-            endTime: formData.get('endTime') as string,
+            note: safeString(formData.get('note')),
+            startDate: selectedDate.toISOString().split('T')[0],
+            endDate: safeString(formData.get('endDate')),
+            startTime: safeString(formData.get('startTime')),
+            endTime: safeString(formData.get('endTime')),
         }
         const result = planSchema.safeParse(raw)
         if (!result.success) {
@@ -49,11 +51,16 @@ export default function PlansForm() {
             return
         }
         setErrors({})
-        formRef.current?.submit()
+        try {
+            await actions.postUserPlans(new FormData(form))
+        } catch (err) {
+            console.error('Server error:', err)
+        }
     }
+      
 
     return (
-        <form className="m-10 space-y-6" action={actions.postUserPlans}
+        <form className="m-10 space-y-6"
             ref={formRef} onSubmit={handleSubmit}>
             <div>
                 <label htmlFor="title" className="block text-sm font-medium mb-1">
@@ -75,7 +82,9 @@ export default function PlansForm() {
                 <label htmlFor="startDate" className="block text-sm font-medium mb-1">
                     Start Date
                 </label>
-                <input type="date" id="startDate" name="startDate" defaultValue={selectedDate.toISOString().split('T')[0]}
+                <input type="date" id="startDate" name="startDate"
+                    value={selectedDate.toISOString().split('T')[0]}
+                    onChange={(e) => setSelectedDate(new Date(e.target.value))}
                     className="w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
                 {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
             </div>
@@ -87,7 +96,7 @@ export default function PlansForm() {
                 </label>
                 {showEndDate && (
                     <>
-                        <input type="date" name="endDate" defaultValue={selectedDate.toISOString().split('T')[0]}
+                        <input type="date" name="endDate"
                             className="mt-2 w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
                         {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
                     </>
@@ -103,7 +112,7 @@ export default function PlansForm() {
                     <div className="grid grid-cols-2 gap-4 mt-2">
                         <div>
                             <label htmlFor="startTime" className="block text-sm mb-1">Start Time</label>
-                            <input type="time" id="startTime" name="startTime" defaultValue={selectedDate.toTimeString().slice(0, 5)}
+                            <input type="time" id="startTime" name="startTime"
                                 className="w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
                             {errors.startTime && <p className="text-red-500 text-sm mt-1">{errors.startTime}</p>}
                         </div>

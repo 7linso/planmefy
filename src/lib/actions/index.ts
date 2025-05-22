@@ -18,63 +18,58 @@ export async function getAllUserPlans() {
         .find({ userId: session.user.id })
         .sort({ createdAt: -1 })
         .toArray()
+        
+    const isValidTime = (value: any): value is string =>
+        typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)
+
     return plans.map((plan) => ({
-        _id: plan._id.toString(), 
-        userId: plan.userId,
+        _id: plan._id.toString(),
         title: plan.title,
         note: plan.note,
-        created_at: plan.created_at instanceof Date
-            ? plan.created_at.toISOString()
-            : new Date(plan.created_at).toISOString(), 
+        startDate: plan.startDate ?? null,  // already ISO string
+        endDate: plan.endDate ?? null,
+        startTime: isValidTime(plan.startTime) ? plan.startTime : null,
+        endTime: isValidTime(plan.endTime) ? plan.endTime : null,
+        // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
     }))
 }
 
 export async function getUserPlansByDate() {
-    const session = await getServerSession(authOptions)
-    if (!session || !session.user)
-        throw new Error("Not authenticated")
 
-    const client = await clientPromise
-    const db = client.db('test')
-    const plans = await db.collection('plans')
-        .find({ userId: session.user.id })
-        .sort({ createdAt: -1 })
-        .toArray()
-    return plans.map((plan) => ({
-        _id: plan._id.toString(),
-        userId: plan.userId,
-        title: plan.title,
-        note: plan.note,
-        created_at: plan.created_at instanceof Date
-            ? plan.created_at.toISOString()
-            : new Date(plan.created_at).toISOString(),
-    }))
 }
 
 export async function postUserPlans(formData: FormData): Promise<void> {
     const session = await getServerSession(authOptions)
-    if (!session || !session.user)
-        throw new Error("Not authenticated")
+    if (!session || !session.user) throw new Error("Not authenticated")
 
-    const title = formData.get('title')
-    const note = formData.get('note')
-    const parsed = planSchema.safeParse({ title, note })
+    const safeString = (v: FormDataEntryValue | null) =>
+        typeof v === 'string' && v.trim() !== '' ? v : undefined
+
+    const raw = {
+        title: formData.get('title'),
+        note: safeString(formData.get('note')),
+        startDate: formData.get('startDate'),
+        endDate: safeString(formData.get('endDate')),
+        startTime: safeString(formData.get('startTime')),
+        endTime: safeString(formData.get('endTime')),
+    }
+    const parsed = planSchema.safeParse(raw)
     if (!parsed.success) {
         console.error(parsed.error.flatten())
         throw new Error('Invalid Input')
     }
-
     const client = await clientPromise
     const db = client.db('test')
+
     await db.collection('plans').insertOne({
         userId: session.user.id,
-        title,
-        note,
+        ...parsed.data,
         created_at: new Date()
     })
     revalidatePath('/')
     redirect('/')
 }
+
 
 export async function deleteUserPlan(id: string) {
     const session = await getServerSession(authOptions)
