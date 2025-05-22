@@ -6,6 +6,7 @@ import { planSchema } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ObjectId } from "mongodb";
+import { date } from "zod";
 
 export async function getAllUserPlans() {
     const session = await getServerSession(authOptions)
@@ -18,7 +19,7 @@ export async function getAllUserPlans() {
         .find({ userId: session.user.id })
         .sort({ createdAt: -1 })
         .toArray()
-        
+
     const isValidTime = (value: any): value is string =>
         typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)
 
@@ -26,7 +27,7 @@ export async function getAllUserPlans() {
         _id: plan._id.toString(),
         title: plan.title,
         note: plan.note,
-        startDate: plan.startDate ?? null,  // already ISO string
+        startDate: plan.startDate ?? null,
         endDate: plan.endDate ?? null,
         startTime: isValidTime(plan.startTime) ? plan.startTime : null,
         endTime: isValidTime(plan.endTime) ? plan.endTime : null,
@@ -34,8 +35,34 @@ export async function getAllUserPlans() {
     }))
 }
 
-export async function getUserPlansByDate() {
+export async function getUserPlansByDate(date: Date) {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user)
+        throw new Error("Not authenticated")
 
+    const client = await clientPromise
+    const db = client.db('test')
+    const plans = await db.collection('plans')
+        .find({
+            userId: session.user.id,
+            startDate: date.toISOString().split('T')[0]
+        })
+        .sort({ createdAt: -1 })
+        .toArray()
+
+    const isValidTime = (value: any): value is string =>
+        typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)
+
+    return plans.map((plan) => ({
+        _id: plan._id.toString(),
+        title: plan.title,
+        note: plan.note,
+        startDate: plan.startDate ?? null,
+        endDate: plan.endDate ?? null,
+        startTime: isValidTime(plan.startTime) ? plan.startTime : null,
+        endTime: isValidTime(plan.endTime) ? plan.endTime : null,
+        // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
+    }))
 }
 
 export async function postUserPlans(formData: FormData): Promise<void> {

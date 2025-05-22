@@ -1,15 +1,20 @@
 import * as actions from '@/components/calendar/calendar-utils'
 import { useSelectedDate } from '@/lib/store/selectedData'
-
+import { useRouter } from 'next/navigation'
 interface CalendarSellProps {
     day: Date
 }
 
 export default function CalendarSell({ day }: CalendarSellProps) {
-    const {selectedDate, setSelectedDate} = useSelectedDate()
+    const { selectedDate, setSelectedDate } = useSelectedDate()
+    const router = useRouter()
+
     return (<>
-        <button
-            onClick={() => setSelectedDate(day)}
+        <button onClick={() => {
+            setSelectedDate(day)
+            document.cookie = `selectedDate=${day.toISOString().split('T')[0]}; path=/`
+            router.refresh()
+        }}
             className={`m-2 relative aspect-square w-full rounded cursor-pointer
                         transition-colors duration-200
                         border
@@ -28,6 +33,5 @@ export default function CalendarSell({ day }: CalendarSellProps) {
                 {day.getDate()}
             </span>
         </button>
-
     </>)
 }
