@@ -25,9 +25,8 @@ More than code, I want to give this project **life and personality**, something 
 
 - 📆 **Interactive Calendar** — Navigate days and view plans in a clean layout.
 - ✍️ **Add & Manage Events** — Easily create, update, and delete daily plans.
-- 🔐 **Google Authentication** — Secure login with Google using Lucia.
-- 🌤️ **Weather Integration** — Automatically fetches weather based on your location and date.
-- 🎨 **Animated Transitions** — Smooth calendar-to-form transitions for a modern UX.
+- 🔐 **Google Authentication** — Secure login with Google using OAuth.
+- 🌤️ **Weather Integration** — Automatically fetches weather based on location and date.
 
 ---
 
@@ -36,7 +35,6 @@ More than code, I want to give this project **life and personality**, something 
 - [Next.js](https://nextjs.org/) (App Router)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
-- [Lucia Auth](https://lucia-auth.com/) for authentication
 - [OpenWeather API](https://openweathermap.org/api) for weather data
 - [Framer Motion](https://www.framer.com/motion/) for animations
 - [MongoDB](https://www.mongodb.com) to store data
