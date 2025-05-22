@@ -6,7 +6,6 @@ import { planSchema } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ObjectId } from "mongodb";
-import { date } from "zod";
 
 export async function getAllUserPlans() {
     const session = await getServerSession(authOptions)
@@ -117,5 +116,38 @@ export async function deleteUserPlan(id: string) {
     } catch (err) {
         console.error("Delete failed:", err);
     }
+    revalidatePath('/')
+}
+
+export async function updateUserPlan(formData: FormData, id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user)
+        throw new Error("Not authenticated")
+
+    const safeString = (v: FormDataEntryValue | null) =>
+        typeof v === 'string' && v.trim() !== '' ? v : undefined
+
+    const raw = {
+        title: formData.get('title'),
+        note: safeString(formData.get('note')),
+        startDate: formData.get('startDate'),
+        endDate: safeString(formData.get('endDate')),
+        startTime: safeString(formData.get('startTime')),
+        endTime: safeString(formData.get('endTime'))
+    }
+    const parsed = planSchema.safeParse(raw)
+    if (!parsed.success) {
+        console.error(parsed.error.flatten())
+        throw new Error('Invalid Input')
+    }
+
+    const client = await clientPromise
+    const db = client.db('test')
+
+    await db.collection('plans').updateOne({
+        userId: session.user.id,
+        _id: new ObjectId(id),
+    }, { ...parsed.data })
+
     revalidatePath('/')
 }

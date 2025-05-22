@@ -18,18 +18,15 @@ export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">My Plans</h1>
                 <Link
                     href="/create-plan"
-                    className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                >
+                    className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                     + Add Plan
                 </Link>
             </div>
 
             <ul className="space-y-4">
                 {userPlans.map((plan) => (
-                    <li
-                        key={plan._id}
-                        className="flex flex-col gap-2 p-4 rounded-xl border dark:border-gray-700 shadow-sm bg-white dark:bg-gray-900 transition-all duration-300 hover:shadow-md"
-                    >
+                    <li key={plan._id}
+                        className="flex flex-col gap-2 p-4 rounded-xl border dark:border-gray-700 shadow-sm bg-white dark:bg-gray-900 transition-all duration-300 hover:shadow-md">
                         <div className="flex justify-between items-start">
                             <strong className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                                 {plan.title}
