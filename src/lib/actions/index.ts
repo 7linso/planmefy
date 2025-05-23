@@ -64,6 +64,42 @@ export async function getUserPlansByDate(date: Date) {
     }))
 }
 
+export async function getUserPlansById(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user)
+        throw new Error("Not authenticated")
+
+    let objectId: ObjectId
+    try {
+        objectId = new ObjectId(id)
+    } catch {
+        console.warn('[Invalid ObjectId]', id)
+        return null
+    }
+    const client = await clientPromise
+    const db = client.db('test')
+    const plan = await db.collection('plans')
+        .findOne({
+            userId: session.user.id,
+            _id: objectId,
+        })
+    console.log(plan)
+    if (!plan) return null
+    
+    const isValidTime = (value: any): value is string =>
+        typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)
+
+    return {
+        _id: plan._id.toString(),
+        title: plan.title,
+        note: plan.note,
+        startDate: plan.startDate ?? null,
+        endDate: plan.endDate ?? null,
+        startTime: isValidTime(plan.startTime) ? plan.startTime : null,
+        endTime: isValidTime(plan.endTime) ? plan.endTime : null,
+    }
+}
+
 export async function postUserPlans(formData: FormData): Promise<void> {
     const session = await getServerSession(authOptions)
     if (!session || !session.user) throw new Error("Not authenticated")
@@ -95,7 +131,6 @@ export async function postUserPlans(formData: FormData): Promise<void> {
     revalidatePath('/')
     redirect('/')
 }
-
 
 export async function deleteUserPlan(id: string) {
     const session = await getServerSession(authOptions)

@@ -33,23 +33,26 @@ export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
                             </strong>
                             <DeleteButton id={plan._id} />
                         </div>
-                        <div className="text-gray-500 dark:text-gray-400 space-y-1">
-                            <div>
-                                📅 {plan.startDate}
-                                {plan.endDate && plan.endDate !== plan.startDate ? ` → ${plan.endDate}` : ''}
-                            </div>
-                            {plan.startTime && (
+                        <Link href={plan._id}>
+                            <div className="text-gray-500 dark:text-gray-400 space-y-1">
                                 <div>
-                                    🕒 {plan.startTime}
-                                    {plan.endTime ? ` → ${plan.endTime}` : ''}
+                                    📅 {plan.startDate}
+                                    {plan.endDate && plan.endDate !== plan.startDate ? ` → ${plan.endDate}` : ''}
                                 </div>
+                                {plan.startTime && (
+                                    <div>
+                                        🕒 {plan.startTime}
+                                        {plan.endTime ? ` → ${plan.endTime}` : ''}
+                                    </div>
+                                )}
+                            </div>
+
+                            {plan.note && (
+                                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                    {plan.note}
+                                </p>
                             )}
-                        </div>
-                        {plan.note && (
-                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                                {plan.note}
-                            </p>
-                        )}
+                        </Link>
                     </li>
                 ))}
             </ul>
