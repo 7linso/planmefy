@@ -1,23 +1,29 @@
-import Calendar from "@/components/calendar/calendar";
-import PlansDisplay from "@/components/plans/plans-display";
-import { redirect } from "next/navigation";
-import { authOptions } from "./api/auth/[...nextauth]/route";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth"
+import Link from "next/link"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
-export default async function Home() {
+export default async function LandingPage() {
   const session = await getServerSession(authOptions)
-
-  if (!session) redirect('home')
+  const href = (session) ? '/calendar' : 'signin'
 
   return (<>
-    <div className="flex flex-col lg:flex-row gap-4 px-4 py-6">
-      <div className="w-full lg:w-1/3">
-        <PlansDisplay />
-      </div>
-      <div className="w-full lg:w-2/3">
-        <Calendar />
+    <div className="flex items-center justify-center text-center min-h-[calc(100vh-4rem)]">
+      <div className="flex flex-col w-full h-full p-6 mx-auto max-w-4xl">
+        <main className="flex-1 flex flex-col justify-center items-center px-3">
+          <h1 className="text-5xl font-bold mb-6">Planmefy</h1>
+          <p className="text-lg md:text-xl mb-6 max-w-xl leading-relaxed">
+            Welcome to Planmefy! <br />
+            Plan your life, organize your thoughts, and stay productive. <br />
+            Create, manage, and share your personal plans with ease.
+          </p>
+          <Link
+            href={href}
+            className="btn bg-white text-gray-900 px-6 py-3 text-lg font-semibold rounded shadow hover:bg-gray-200 transition"
+          >
+            Get Started
+          </Link>
+        </main>
       </div>
     </div>
-  </>
-  );
+  </>)
 }

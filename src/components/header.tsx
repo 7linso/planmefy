@@ -21,7 +21,7 @@ export default function Header() {
                             <button
                                 onClick={() =>
                                     signOut({ redirect: false }).then(() => {
-                                        router.push('/home')
+                                        router.push('/')
                                     })
                                 }
                                 className="flex items-center text-sm font-medium text-blue-300 dark:hover:text-blue-100 hover:text-blue-400 transition duration-200"

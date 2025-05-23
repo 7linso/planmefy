@@ -128,8 +128,8 @@ export async function postUserPlans(formData: FormData): Promise<void> {
         ...parsed.data,
         created_at: new Date()
     })
-    revalidatePath('/')
-    redirect('/')
+    revalidatePath('/calendar')
+    redirect('/calendar')
 }
 
 export async function deleteUserPlan(id: string) {
@@ -151,7 +151,7 @@ export async function deleteUserPlan(id: string) {
     } catch (err) {
         console.error("Delete failed:", err);
     }
-    revalidatePath('/')
+    revalidatePath('/calendar')
 }
 
 export async function updateUserPlan(formData: FormData, id: string) {
@@ -184,5 +184,5 @@ export async function updateUserPlan(formData: FormData, id: string) {
         _id: new ObjectId(id),
     }, { ...parsed.data })
 
-    revalidatePath('/')
+    revalidatePath('/calendar')
 }

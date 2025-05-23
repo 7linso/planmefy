@@ -2,12 +2,12 @@ import {withAuth} from 'next-auth/middleware'
 
 export default withAuth({
     pages: {
-        signIn: '/home'
+        signIn: '/'
     }
 })
 
 export const config = {
     matcher: [
-        '/((?!home|api/auth|feedback|signin).*)',
+        '/((?!api/auth|feedback|signin).*)',
     ],
   }
