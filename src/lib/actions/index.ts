@@ -64,39 +64,37 @@ export async function getUserPlansByDate(date: Date) {
     }))
 }
 
-export async function getUserPlansById(id: string) {
-    const session = await getServerSession(authOptions)
-    if (!session || !session.user)
-        throw new Error("Not authenticated")
+export async function getUserPlansById(id: string, userId: string) {
+    const client = await clientPromise
+    const db = client.db('test')
 
-    let objectId: ObjectId
+    let objectId
     try {
         objectId = new ObjectId(id)
-    } catch {
+    } catch (err) {
         console.warn('[Invalid ObjectId]', id)
         return null
     }
-    const client = await clientPromise
-    const db = client.db('test')
-    const plan = await db.collection('plans')
-        .findOne({
-            userId: session.user.id,
-            _id: objectId,
-        })
-    console.log(plan)
-    if (!plan) return null
-    
-    const isValidTime = (value: any): value is string =>
-        typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)
+    console.log('[getUserPlansById] ID:', id)
+    console.log('[getUserPlansById] userId:', userId)
 
+    const plan = await db.collection('plans').findOne({
+        _id: objectId,
+        userId,
+    })
+
+    if (!plan) {
+        console.warn('[Plan not found]', { _id: objectId.toString(), userId })
+        return null
+    }
     return {
         _id: plan._id.toString(),
         title: plan.title,
         note: plan.note,
-        startDate: plan.startDate ?? null,
-        endDate: plan.endDate ?? null,
-        startTime: isValidTime(plan.startTime) ? plan.startTime : null,
-        endTime: isValidTime(plan.endTime) ? plan.endTime : null,
+        startDate: plan.startDate,
+        endDate: plan.endDate,
+        startTime: plan.startTime,
+        endTime: plan.endTime,
     }
 }
 

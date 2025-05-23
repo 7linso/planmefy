@@ -33,7 +33,7 @@ export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
                             </strong>
                             <DeleteButton id={plan._id} />
                         </div>
-                        <Link href={`/calendar/${plan._id}`}>
+                        <Link href={`/calendar/${plan._id}`} scroll={false}>
                             <div className="text-gray-500 dark:text-gray-400 space-y-1">
                                 <div>
                                     📅 {plan.startDate}
