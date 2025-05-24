@@ -41,10 +41,18 @@ export async function getUserPlansByDate(date: Date) {
 
     const client = await clientPromise
     const db = client.db('test')
+
+    const dateStr = date.toISOString().split('T')[0]
+    
     const plans = await db.collection('plans')
         .find({
             userId: session.user.id,
-            startDate: date.toISOString().split('T')[0]
+            startDate: { $lte: dateStr },
+            $or: [
+                { endDate: { $gte: dateStr } },
+                { endDate: null, startDate: dateStr },
+                { endDate: { $exists: false }, startDate: dateStr },
+            ]              
         })
         .sort({ createdAt: -1 })
         .toArray()

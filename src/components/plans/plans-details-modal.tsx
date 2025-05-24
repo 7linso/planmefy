@@ -18,10 +18,37 @@ export default function PlansDetailsModal({ userPlan }: { userPlan: Plan }) {
                 className="bg-white dark:bg-gray-900 max-w-md w-full p-6 rounded-lg shadow-lg"
                 onClick={(e) => e.stopPropagation()}
             >
-                <h2 className="text-xl font-bold">{userPlan.title}</h2>
-                <p className="text-sm text-gray-600 mt-2">{userPlan.note}</p>
-                <p className="text-xs mt-1 text-gray-500">Start: {userPlan.startDate}</p>
-                <CloseButton />
+                <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-xl font-bold">{userPlan.title}</h2>
+                    <CloseButton />
+                </div>
+                <div className="mt-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    {userPlan.note && (
+                        <p>
+                            <span className="font-medium text-gray-800 dark:text-white">Note:</span>{' '}
+                            {userPlan.note}
+                        </p>
+                    )}
+
+                    <p>
+                        <span className="font-medium text-gray-800 dark:text-white">Start Date:</span>{' '}
+                        {userPlan.startDate}
+                    </p>
+
+                    {userPlan.endDate && (
+                        <p>
+                            <span className="font-medium text-gray-800 dark:text-white">End Date:</span>{' '}
+                            {userPlan.endDate}
+                        </p>
+                    )}
+
+                    {(userPlan.startTime || userPlan.endTime) && (
+                        <p>
+                            <span className="font-medium text-gray-800 dark:text-white">Time:</span>{' '}
+                            {userPlan.startTime ?? '--'} — {userPlan.endTime ?? '--'}
+                        </p>
+                    )}
+                </div>
             </div>
         </div>
     )
