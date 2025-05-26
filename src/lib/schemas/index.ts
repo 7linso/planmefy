@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const planSchema = z.object(
     {
-        title: z.string().min(3, 'Title is required'),
+        title: z.string().min(3, 'Title is missing or it is too short'),
         note: z.string().optional(),
         startDate: z.string().refine(v => !isNaN(Date.parse(v)), {
             message: 'Start date is required',
@@ -10,6 +10,8 @@ export const planSchema = z.object(
         endDate: z.string().optional(),
         startTime: z.string().optional(),
         endTime: z.string().optional(),
+        eventType: z.enum(['indoor', 'outdoor']).optional(),
+        location: z.string().optional()
     }
 ).refine((data) => {
     if (!data.endDate && !data.startTime && !data.endTime) {

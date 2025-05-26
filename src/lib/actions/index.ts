@@ -30,6 +30,8 @@ export async function getAllUserPlans() {
         endDate: plan.endDate ?? null,
         startTime: isValidTime(plan.startTime) ? plan.startTime : null,
         endTime: isValidTime(plan.endTime) ? plan.endTime : null,
+        eventType: plan.eventType,
+        location: plan.location,
         // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
     }))
 }
@@ -43,7 +45,7 @@ export async function getUserPlansByDate(date: Date) {
     const db = client.db('test')
 
     const dateStr = date.toISOString().split('T')[0]
-    
+
     const plans = await db.collection('plans')
         .find({
             userId: session.user.id,
@@ -52,7 +54,7 @@ export async function getUserPlansByDate(date: Date) {
                 { endDate: { $gte: dateStr } },
                 { endDate: null, startDate: dateStr },
                 { endDate: { $exists: false }, startDate: dateStr },
-            ]              
+            ]
         })
         .sort({ createdAt: -1 })
         .toArray()
@@ -68,6 +70,9 @@ export async function getUserPlansByDate(date: Date) {
         endDate: plan.endDate ?? null,
         startTime: isValidTime(plan.startTime) ? plan.startTime : null,
         endTime: isValidTime(plan.endTime) ? plan.endTime : null,
+        eventType: plan.eventType,
+        location: plan.location,
+
         // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
     }))
 }
@@ -103,6 +108,9 @@ export async function getUserPlansById(id: string, userId: string) {
         endDate: plan.endDate,
         startTime: plan.startTime,
         endTime: plan.endTime,
+        eventType: plan.eventType,
+        location: plan.location,
+
     }
 }
 
@@ -120,6 +128,8 @@ export async function postUserPlans(formData: FormData): Promise<void> {
         endDate: safeString(formData.get('endDate')),
         startTime: safeString(formData.get('startTime')),
         endTime: safeString(formData.get('endTime')),
+        eventType: formData.get('eventType'),
+        location: formData.get('location')
     }
     const parsed = planSchema.safeParse(raw)
     if (!parsed.success) {
@@ -174,7 +184,9 @@ export async function updateUserPlan(formData: FormData, id: string) {
         startDate: formData.get('startDate'),
         endDate: safeString(formData.get('endDate')),
         startTime: safeString(formData.get('startTime')),
-        endTime: safeString(formData.get('endTime'))
+        endTime: safeString(formData.get('endTime')),
+        eventType: formData.get('eventType'),
+        location: formData.get('location')
     }
     const parsed = planSchema.safeParse(raw)
     if (!parsed.success) {
@@ -192,3 +204,51 @@ export async function updateUserPlan(formData: FormData, id: string) {
 
     revalidatePath('/calendar')
 }
+
+export async function getCoordsForLocation(location: string) {
+    const key = process.env.MAPTILER_API_KEY
+    if (!key) throw new Error('Missing key for geocoding')
+
+    const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(
+        location
+    )}.json?key=${key}&limit=1`
+
+    const res = await fetch(url)
+    if (!res.ok) return null
+
+    const data = await res.json()
+    const feature = data.features?.[0]
+
+    return {
+        lat: feature.geometry.coordinates[1],
+        lon: feature.geometry.coordinates[0],
+        formatted: feature.place_name
+    }
+}
+
+export async function getWeatherForecast({
+    date,
+    lat,
+    lon,
+}: {
+    date: string 
+    lat: number
+    lon: number
+}) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,precipitation_sum&timezone=auto&start_date=${date}&end_date=${date}`
+
+    const res = await fetch(url)
+
+    if (!res.ok) return null
+
+    const data = await res.json()
+    const forecast = data?.daily
+
+    if (!forecast || !forecast.temperature_2m_max) return null
+
+    return {
+        temp: forecast.temperature_2m_max[0], 
+        rain: forecast.precipitation_sum[0],  
+    }
+}
+  

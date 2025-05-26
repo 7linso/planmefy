@@ -8,7 +8,9 @@ type Plan = {
     startDate: string
     endDate?: string
     startTime?: string
-    endTime?: string
+    endTime?: string,
+    eventType?: string,
+    location?:string
 }
 
 export default function PlansDetailsModal({ userPlan }: { userPlan: Plan }) {
@@ -29,23 +31,32 @@ export default function PlansDetailsModal({ userPlan }: { userPlan: Plan }) {
                             {userPlan.note}
                         </p>
                     )}
-
                     <p>
                         <span className="font-medium text-gray-800 dark:text-white">Start Date:</span>{' '}
                         {userPlan.startDate}
                     </p>
-
                     {userPlan.endDate && (
                         <p>
                             <span className="font-medium text-gray-800 dark:text-white">End Date:</span>{' '}
                             {userPlan.endDate}
                         </p>
                     )}
-
                     {(userPlan.startTime || userPlan.endTime) && (
                         <p>
                             <span className="font-medium text-gray-800 dark:text-white">Time:</span>{' '}
                             {userPlan.startTime ?? '--'} — {userPlan.endTime ?? '--'}
+                        </p>
+                    )}
+                    {userPlan.eventType && (
+                        <p>
+                            <span className="font-medium text-gray-800 dark:text-white">Event Type:</span>{' '}
+                            {userPlan.eventType}
+                        </p>
+                    )}
+                    {userPlan.location && (
+                        <p>
+                            <span className="font-medium text-gray-800 dark:text-white">Location:</span>{' '}
+                            {userPlan.location}
                         </p>
                     )}
                 </div>

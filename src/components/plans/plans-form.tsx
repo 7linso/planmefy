@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import * as actions from '@/lib/actions'
 import { planSchema } from '@/lib/schemas'
 import { useSelectedDate } from '@/lib/store/selectedData'
@@ -14,11 +14,19 @@ export default function PlansForm() {
         startDate?: string
         endDate?: string
         startTime?: string
-        endTime?: string
+        endTime?: string,
+        eventType?: string
     }>({})
 
     const [showTime, setShowTime] = useState(false)
     const [showEndDate, setShowEndDate] = useState(false)
+    const [showEventLocation, setShowEventLocation] = useState(false)
+
+    const [formState, setFormState] = useState({
+        location: '',
+        eventType: '',
+    })
+    const [weatherPreview, setWeatherPreview] = useState<null | { temp: number; rain: number }>(null)
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -59,6 +67,30 @@ export default function PlansForm() {
         }
     }
 
+    useEffect(() => {
+        const timeout = setTimeout(async () => {
+            if (!formState.location || !selectedDate) return
+
+            try {
+                const geo = await actions.getCoordsForLocation(formState.location)
+                if (!geo) return
+
+                const weather = await actions.getWeatherForecast({
+                    date: selectedDate.toISOString().split('T')[0],
+                    lat: geo.lat,
+                    lon: geo.lon,
+                })
+
+                setWeatherPreview(weather)
+            } catch (err) {
+                console.error('Failed to fetch weather:', err)
+                setWeatherPreview(null)
+            }
+        }, 600)
+
+        return () => clearTimeout(timeout)
+    }, [formState.location, selectedDate])
+
 
     return (<>
         <div className="flex items-center justify-between mb-4">
@@ -71,23 +103,23 @@ export default function PlansForm() {
         </div>
         <form className="m-2 space-y-6"
             ref={formRef} onSubmit={handleSubmit}>
-            <div>
+            <section>
                 <label htmlFor="title" className="block text-sm font-medium mb-1">
                     Title
                 </label>
                 <input type="text" id="title" name="title" placeholder="Walk the dog"
                     className="w-full px-4 py-2 rounded-md border dark:bg-gray-800 transition" />
                 {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-            </div>
-            <div>
+            </section>
+            <section>
                 <label htmlFor="note" className="block text-sm font-medium mb-1">
                     Notes
                 </label>
                 <textarea id="note" name="note" placeholder="It's gonna be hot, take water"
                     className="w-full px-4 py-2 rounded-md border dark:bg-gray-800 transition resize-none" />
                 {errors.note && <p className="text-red-500 text-sm mt-1">{errors.note}</p>}
-            </div>
-            <div>
+            </section>
+            <section>
                 <label htmlFor="startDate" className="block text-sm font-medium mb-1">
                     Start Date
                 </label>
@@ -96,13 +128,12 @@ export default function PlansForm() {
                     onChange={(e) => setSelectedDate(new Date(e.target.value))}
                     className="w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
                 {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
-            </div>
-            <div>
-                <label className="inline-flex text-sm items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={showEndDate}
-                        onChange={() => setShowEndDate(!showEndDate)} />
-                    Add End Date
-                </label>
+            </section>
+            <section>
+                <p onClick={() => setShowEndDate((prev) => !prev)}
+                    className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
+                    {showEndDate ? '− Hide End Date' : '+ Set End Date'}
+                </p>
                 {showEndDate && (
                     <>
                         <input type="date" name="endDate"
@@ -110,13 +141,12 @@ export default function PlansForm() {
                         {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
                     </>
                 )}
-            </div>
-            <div>
-                <label className="inline-flex text-sm items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={showTime}
-                        onChange={() => setShowTime(!showTime)} />
-                    Add Time Range
-                </label>
+            </section>
+            <section>
+                <p onClick={() => setShowTime((prev) => !prev)}
+                    className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
+                    {showTime ? '− Hide Time Range' : '+ Set Time Range'}
+                </p>
                 {showTime && (
                     <div className="grid grid-cols-2 gap-4 mt-2">
                         <div>
@@ -133,7 +163,50 @@ export default function PlansForm() {
                         </div>
                     </div>
                 )}
-            </div>
+            </section>
+            <section>
+                <p onClick={() => setShowEventLocation((prev) => !prev)}
+                    className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
+                    {showEventLocation ? '− Hide Event Location' : '+ Select Event Location'}
+                </p>
+                {showEventLocation && (
+                    <>
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                            <label className="flex items-center gap-2 text-sm">
+                                <input type="radio" id="indoor" name="eventType"
+                                    value="indoor" className="accent-blue-600"
+                                    onChange={(e) => setFormState((prev) => ({ ...prev, eventType: e.target.value }))} />
+                                Indoor
+                            </label>
+                            <label className="flex items-center gap-2 text-sm">
+                                <input type="radio" id="outdoor" name="eventType"
+                                    value="outdoor" className="accent-blue-600"
+                                    onChange={(e) => setFormState((prev) => ({ ...prev, eventType: e.target.value }))} />
+                                Outdoor
+                            </label>
+                        </div>
+
+                        <label htmlFor="location" className="block text-sm font-medium mb-1">
+                            Where will it take place?
+                        </label>
+                        <input type='text' id="location" name="location" placeholder="123 Bean St."
+                            className="w-full px-4 py-2 rounded-md border dark:bg-gray-800 transition"
+                            onChange={(e) =>
+                                setFormState((prev) => ({ ...prev, location: e.target.value }))
+                            } />
+                        <div className="text-sm mt-4 text-gray-400">
+                            🌤 Forecast for that location on {selectedDate.toISOString().split('T')[0]}:{' '}
+                            <br />
+                            {weatherPreview ? (<>
+                                <strong>{weatherPreview.temp}°C</strong>, {' '}
+                                {weatherPreview.rain > 0 ? `🌧 ${weatherPreview.rain}mm rain` : 'no rain expected'}
+                            </>)
+                                :
+                                (<div className="h-5 w-48 mt-2 bg-gray-300 dark:bg-gray-700 rounded animate-pulse" />)}
+                        </div>
+                    </>
+                )}
+            </section>
             <button type="submit" className="p-2 rounded-md border bg-blue-600 text-white hover:bg-blue-700 transition">
                 Submit
             </button>

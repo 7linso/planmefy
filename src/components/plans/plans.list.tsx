@@ -7,8 +7,9 @@ interface Plan {
     note?: string
     startDate: string
     endDate?: string
-    startTime?: string | null
-    endTime?: string | null
+    startTime?: string,
+    endTime?: string,
+    location?: string
 }
 
 export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
@@ -50,6 +51,11 @@ export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
                             {plan.note && (
                                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                                     {plan.note}
+                                </p>
+                            )}
+                            {plan.location && (
+                                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                    {plan.location}
                                 </p>
                             )}
                         </Link>
