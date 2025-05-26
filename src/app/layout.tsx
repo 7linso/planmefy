@@ -18,7 +18,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-white text-black dark:bg-black dark:text-white">
+      <body className="bg-white text-black dark:bg-black dark:text-white w-full max-w-7xl mx-auto px-4">
         <Providers>
           <Header />
           {children}

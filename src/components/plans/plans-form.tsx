@@ -3,6 +3,7 @@ import { useRef, useState } from 'react'
 import * as actions from '@/lib/actions'
 import { planSchema } from '@/lib/schemas'
 import { useSelectedDate } from '@/lib/store/selectedData'
+import Link from 'next/link'
 
 export default function PlansForm() {
     const { selectedDate, setSelectedDate } = useSelectedDate()
@@ -57,10 +58,18 @@ export default function PlansForm() {
             console.error('Server error:', err)
         }
     }
-      
 
-    return (
-        <form className="m-10 space-y-6"
+
+    return (<>
+        <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Add Plan</h1>
+            <Link
+                href="/calendar"
+                className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                Go Back
+            </Link>
+        </div>
+        <form className="m-2 space-y-6"
             ref={formRef} onSubmit={handleSubmit}>
             <div>
                 <label htmlFor="title" className="block text-sm font-medium mb-1">
@@ -89,7 +98,7 @@ export default function PlansForm() {
                 {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
             </div>
             <div>
-                <label className="inline-flex items-center gap-2 cursor-pointer">
+                <label className="inline-flex text-sm items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={showEndDate}
                         onChange={() => setShowEndDate(!showEndDate)} />
                     Add End Date
@@ -103,7 +112,7 @@ export default function PlansForm() {
                 )}
             </div>
             <div>
-                <label className="inline-flex items-center gap-2 cursor-pointer">
+                <label className="inline-flex text-sm items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={showTime}
                         onChange={() => setShowTime(!showTime)} />
                     Add Time Range
@@ -129,5 +138,6 @@ export default function PlansForm() {
                 Submit
             </button>
         </form>
+    </>
     )
 }
