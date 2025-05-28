@@ -204,9 +204,10 @@ export async function updateUserPlan(formData: FormData, id: string) {
     await db.collection('plans').updateOne({
         userId: session.user.id,
         _id: new ObjectId(id),
-    }, { ...parsed.data })
+    }, { $set: parsed.data })
 
     revalidatePath('/calendar')
+    redirect(`/calendar`)
 }
 
 export async function getCoordsForLocation(location: string) {

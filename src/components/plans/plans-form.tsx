@@ -31,6 +31,7 @@ export default function PlansForm() {
         location: '',
         eventType: '',
     })
+    
     const [weatherPreview, setWeatherPreview] = useState<null | { temp: number; rain: number }>(null)
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
