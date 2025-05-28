@@ -10,7 +10,8 @@ type Plan = {
     startTime?: string
     endTime?: string,
     eventType?: string,
-    location?:string
+    location?:string,
+    icon: string
 }
 
 export default function PlansDetailsModal({ userPlan }: { userPlan: Plan }) {
@@ -21,7 +22,7 @@ export default function PlansDetailsModal({ userPlan }: { userPlan: Plan }) {
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-xl font-bold">{userPlan.title}</h2>
+                    <h2 className="text-xl font-bold">{userPlan.icon} {userPlan.title}</h2>
                     <CloseButton />
                 </div>
                 <div className="mt-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">

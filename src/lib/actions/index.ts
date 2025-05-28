@@ -32,6 +32,7 @@ export async function getAllUserPlans() {
         endTime: isValidTime(plan.endTime) ? plan.endTime : null,
         eventType: plan.eventType,
         location: plan.location,
+        icon: plan.icon
         // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
     }))
 }
@@ -72,6 +73,7 @@ export async function getUserPlansByDate(date: Date) {
         endTime: isValidTime(plan.endTime) ? plan.endTime : null,
         eventType: plan.eventType,
         location: plan.location,
+        icon: plan.icon
 
         // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
     }))
@@ -110,7 +112,7 @@ export async function getUserPlansById(id: string, userId: string) {
         endTime: plan.endTime,
         eventType: plan.eventType,
         location: plan.location,
-
+        icon: plan.icon
     }
 }
 
@@ -128,8 +130,9 @@ export async function postUserPlans(formData: FormData): Promise<void> {
         endDate: safeString(formData.get('endDate')),
         startTime: safeString(formData.get('startTime')),
         endTime: safeString(formData.get('endTime')),
-        eventType: formData.get('eventType'),
-        location: formData.get('location')
+        eventType: safeString(formData.get('eventType')),
+        location: safeString(formData.get('location')),
+        icon: formData.get('icon')
     }
     const parsed = planSchema.safeParse(raw)
     if (!parsed.success) {
@@ -185,8 +188,9 @@ export async function updateUserPlan(formData: FormData, id: string) {
         endDate: safeString(formData.get('endDate')),
         startTime: safeString(formData.get('startTime')),
         endTime: safeString(formData.get('endTime')),
-        eventType: formData.get('eventType'),
-        location: formData.get('location')
+        eventType: safeString(formData.get('eventType')),
+        location: safeString(formData.get('location')),
+        icon: formData.get('icon')
     }
     const parsed = planSchema.safeParse(raw)
     if (!parsed.success) {
@@ -231,7 +235,7 @@ export async function getWeatherForecast({
     lat,
     lon,
 }: {
-    date: string 
+    date: string
     lat: number
     lon: number
 }) {
@@ -247,8 +251,7 @@ export async function getWeatherForecast({
     if (!forecast || !forecast.temperature_2m_max) return null
 
     return {
-        temp: forecast.temperature_2m_max[0], 
-        rain: forecast.precipitation_sum[0],  
+        temp: forecast.temperature_2m_max[0],
+        rain: forecast.precipitation_sum[0],
     }
 }
-  

@@ -4,6 +4,7 @@ import * as actions from '@/lib/actions'
 import { planSchema } from '@/lib/schemas'
 import { useSelectedDate } from '@/lib/store/selectedData'
 import Link from 'next/link'
+import EmojiSelector from './emoji-picker'
 
 export default function PlansForm() {
     const { selectedDate, setSelectedDate } = useSelectedDate()
@@ -16,24 +17,27 @@ export default function PlansForm() {
         startTime?: string
         endTime?: string,
         eventType?: string
+        location?: string,
+        icon?: string
     }>({})
 
     const [showTime, setShowTime] = useState(false)
     const [showEndDate, setShowEndDate] = useState(false)
     const [showEventLocation, setShowEventLocation] = useState(false)
 
+    const [icon, setIcon] = useState('⭐')
+
     const [formState, setFormState] = useState({
         location: '',
         eventType: '',
     })
     const [weatherPreview, setWeatherPreview] = useState<null | { temp: number; rain: number }>(null)
-
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-
         const form = formRef.current
         if (!form) return
         const formData = new FormData(form)
+        formData.set('icon', icon)
 
         const safeString = (v: FormDataEntryValue | null) =>
             typeof v === 'string' && v.trim() !== '' ? v : undefined
@@ -45,8 +49,12 @@ export default function PlansForm() {
             endDate: safeString(formData.get('endDate')),
             startTime: safeString(formData.get('startTime')),
             endTime: safeString(formData.get('endTime')),
+            eventType: safeString(formData.get('eventType')),
+            location: safeString(formData.get('location')),
+            icon: formData.get('icon'),
         }
         const result = planSchema.safeParse(raw)
+        console.log('Parsed result:', result)
         if (!result.success) {
             const fieldErrors = result.error.flatten().fieldErrors
             setErrors({
@@ -56,12 +64,15 @@ export default function PlansForm() {
                 endDate: fieldErrors.endDate?.[0],
                 startTime: fieldErrors.startTime?.[0],
                 endTime: fieldErrors.endTime?.[0],
+                eventType: fieldErrors.eventType?.[0],
+                location: fieldErrors.location?.[0],
+                icon: fieldErrors.icon?.[0],
             })
             return
         }
         setErrors({})
         try {
-            await actions.postUserPlans(new FormData(form))
+            await actions.postUserPlans(formData)
         } catch (err) {
             console.error('Server error:', err)
         }
@@ -70,7 +81,6 @@ export default function PlansForm() {
     useEffect(() => {
         const timeout = setTimeout(async () => {
             if (!formState.location || !selectedDate) return
-
             try {
                 const geo = await actions.getCoordsForLocation(formState.location)
                 if (!geo) return
@@ -103,13 +113,17 @@ export default function PlansForm() {
         </div>
         <form className="m-2 space-y-6"
             ref={formRef} onSubmit={handleSubmit}>
-            <section>
-                <label htmlFor="title" className="block text-sm font-medium mb-1">
-                    Title
-                </label>
-                <input type="text" id="title" name="title" placeholder="Walk the dog"
-                    className="w-full px-4 py-2 rounded-md border dark:bg-gray-800 transition" />
-                {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+            <section className="flex items-center gap-3 mb-4">
+                <div className="flex-1">
+                    <label htmlFor="title" className="block text-sm font-medium mb-1">
+                        Title
+                    </label>
+                    <input type="text" id="title" name="title" placeholder="Walk the dog"
+                        className="w-full px-4 py-2 rounded-md border dark:bg-gray-800 transition" />
+                    {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+                </div>
+                <EmojiSelector icon={icon} onChange={setIcon} />
+                <input type="hidden" name="icon" value={icon || ''} />
             </section>
             <section>
                 <label htmlFor="note" className="block text-sm font-medium mb-1">
@@ -132,20 +146,19 @@ export default function PlansForm() {
             <section>
                 <p onClick={() => setShowEndDate((prev) => !prev)}
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
-                    {showEndDate ? '− Hide End Date' : '+ Set End Date'}
+                    {showEndDate ? '− Remove End Date' : '+ Set End Date'}
                 </p>
-                {showEndDate && (
-                    <>
-                        <input type="date" name="endDate"
-                            className="mt-2 w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
-                        {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
-                    </>
+                {showEndDate && (<>
+                    <input type="date" name="endDate"
+                        className="mt-2 w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
+                    {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
+                </>
                 )}
             </section>
             <section>
                 <p onClick={() => setShowTime((prev) => !prev)}
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
-                    {showTime ? '− Hide Time Range' : '+ Set Time Range'}
+                    {showTime ? '− Remove Time Range' : '+ Set Time Range'}
                 </p>
                 {showTime && (
                     <div className="grid grid-cols-2 gap-4 mt-2">
@@ -167,7 +180,7 @@ export default function PlansForm() {
             <section>
                 <p onClick={() => setShowEventLocation((prev) => !prev)}
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
-                    {showEventLocation ? '− Hide Event Location' : '+ Select Event Location'}
+                    {showEventLocation ? '− Remove Event Location' : '+ Select Event Location'}
                 </p>
                 {showEventLocation && (
                     <>

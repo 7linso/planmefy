@@ -9,7 +9,8 @@ interface Plan {
     endDate?: string
     startTime?: string,
     endTime?: string,
-    location?: string
+    location?: string,
+    icon: string
 }
 
 export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
@@ -30,7 +31,7 @@ export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
                         className="flex flex-col gap-2 p-4 rounded-xl border dark:border-gray-700 shadow-sm bg-white dark:bg-gray-900 transition-all duration-300 hover:shadow-md">
                         <div className="flex justify-between items-start">
                             <strong className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                                {plan.title}
+                                {plan.icon} {plan.title}
                             </strong>
                             <DeleteButton id={plan._id} />
                         </div>

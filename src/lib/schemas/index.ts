@@ -11,7 +11,11 @@ export const planSchema = z.object(
         startTime: z.string().optional(),
         endTime: z.string().optional(),
         eventType: z.enum(['indoor', 'outdoor']).optional(),
-        location: z.string().optional()
+        location: z.string().optional(),
+        icon: z.union([
+            z.string().emoji('Must be a valid emoji'),
+            z.literal(''),
+        ])
     }
 ).refine((data) => {
     if (!data.endDate && !data.startTime && !data.endTime) {
