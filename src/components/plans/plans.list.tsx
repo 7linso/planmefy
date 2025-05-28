@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import DeleteButton from '../general-components/delete-button'
+import EditButton from '../general-components/edit-button'
 
 interface Plan {
     _id: string
@@ -33,7 +34,10 @@ export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
                             <strong className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                                 {plan.icon} {plan.title}
                             </strong>
-                            <DeleteButton id={plan._id} />
+                            <div className="flex gap-2 ml-auto">
+                                <EditButton id={plan._id} />
+                                <DeleteButton id={plan._id} />
+                            </div>
                         </div>
                         <Link href={`/calendar/${plan._id}`} scroll={false}>
                             <div className="text-gray-500 dark:text-gray-400 space-y-1">

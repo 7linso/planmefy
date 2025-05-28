@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import EmojiPicker, { EmojiClickData } from 'emoji-picker-react'
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'
 
 interface Props {
     icon: string
@@ -38,7 +38,7 @@ export default function EmojiSelector({ icon, onChange }: Props) {
             </button>
             {showPicker && (
                 <div className="absolute z-50 mt-2">
-                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                    <EmojiPicker onEmojiClick={handleEmojiClick} theme={Theme.AUTO}/>
                 </div>
             )}
         </div>
