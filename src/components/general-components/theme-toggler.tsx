@@ -26,7 +26,7 @@ export default function ThemeToggler() {
 
     return (<>
         <label className="flex items-center gap-3 cursor-pointer">
-            <span>🌑</span>
+            <span>🌞</span>
             <div className="relative">
                 <input
                     type="checkbox"
@@ -37,7 +37,7 @@ export default function ThemeToggler() {
                 <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 rounded-full peer-checked:bg-navy-600 transition-colors"></div>
                 <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-full"></div>
             </div>
-            <span>🌞</span>
+            <span>🌑</span>
         </label>
 
     </>)

@@ -53,7 +53,7 @@ export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
                                 )}
                             </div>
 
-                            {plan.note && (
+                            {/* {plan.note && (
                                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                                     {plan.note}
                                 </p>
@@ -62,7 +62,7 @@ export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
                                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                                     {plan.location}
                                 </p>
-                            )}
+                            )} */}
                         </Link>
                     </li>
                 ))}
