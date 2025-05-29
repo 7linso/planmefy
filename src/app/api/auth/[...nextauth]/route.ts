@@ -14,6 +14,19 @@ export const authOptions: NextAuthOptions = {
     secret: process.env.NEXTAUTH_SECRET!,
     session: {
         strategy: "database",
+        maxAge: 60 * 60 * 1, 
+        updateAge: 0, 
+    },
+    cookies: {
+        sessionToken: {
+            name: `next-auth.session-token`,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production",
+            },
+        },
     },
     pages: {
         signIn: "/auth/signin",
