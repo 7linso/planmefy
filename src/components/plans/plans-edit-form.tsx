@@ -5,6 +5,7 @@ import { planSchema } from '@/lib/schemas'
 import { useSelectedDate } from '@/lib/store/selectedData'
 import Link from 'next/link'
 import EmojiSelector from './emoji-picker'
+import LocationInput from '../general-components/location-input'
 
 interface Plan {
     _id: string
@@ -167,6 +168,7 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                         onChange={handleChange}
                         className="w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
                 )}
+                {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
             </section>
             <section>
                 <p onClick={() => setShowTime((prev) => !prev)}
@@ -183,7 +185,7 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                         </div>
                         <div>
                             <label htmlFor="endTime" className="block text-sm mb-1">End Time</label>
-                            <input type="time" id="endTime" value={formData.endTime}
+                            <input type="time" id="endTime" name="endTime" value={formData.endTime}
                                 onChange={handleChange}
                                 className="w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
                         </div>
@@ -211,12 +213,12 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                                 Outdoor
                             </label>
                         </div>
-                        <label htmlFor="location" className="block text-sm font-medium mb-1">
-                            Where will it take place?
-                        </label>
-                        <input type="text" id="location" name="location" value={formData.location}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
+                        <LocationInput prevLocation={formData.location}
+                            onSelect={(location) => {
+                                console.log('Selected:', location)
+                                setFormData((prev) => ({ ...prev, location }))
+                            }}
+                        />
                         <div className="text-sm mt-4 text-gray-400">
                             🌤 Forecast for {selectedDate.toISOString().split('T')[0]}:{' '}
                             <br />

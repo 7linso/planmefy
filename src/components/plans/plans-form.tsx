@@ -5,6 +5,7 @@ import { planSchema } from '@/lib/schemas'
 import { useSelectedDate } from '@/lib/store/selectedData'
 import Link from 'next/link'
 import EmojiSelector from './emoji-picker'
+import LocationInput from '../general-components/location-input'
 
 export default function PlansForm() {
     const { selectedDate, setSelectedDate } = useSelectedDate()
@@ -31,7 +32,7 @@ export default function PlansForm() {
         location: '',
         eventType: '',
     })
-    
+
     const [weatherPreview, setWeatherPreview] = useState<null | { temp: number; rain: number }>(null)
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -101,7 +102,6 @@ export default function PlansForm() {
 
         return () => clearTimeout(timeout)
     }, [formState.location, selectedDate])
-
 
     return (<>
         <div className="flex items-center justify-between mb-4">
@@ -199,15 +199,10 @@ export default function PlansForm() {
                                 Outdoor
                             </label>
                         </div>
-
-                        <label htmlFor="location" className="block text-sm font-medium mb-1">
-                            Where will it take place?
-                        </label>
-                        <input type='text' id="location" name="location" placeholder="123 Bean St."
-                            className="w-full px-4 py-2 rounded-md border dark:bg-gray-800 transition"
-                            onChange={(e) =>
-                                setFormState((prev) => ({ ...prev, location: e.target.value }))
-                            } />
+                        <LocationInput onSelect={(location) => {
+                            console.log('Selected:', location)
+                            setFormState((prev) => ({ ...prev, location: location }))
+                        }} />
                         <div className="text-sm mt-4 text-gray-400">
                             🌤 Forecast for that location on {selectedDate.toISOString().split('T')[0]}:{' '}
                             <br />
