@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import CloseButton from '@/components/general-components/close-button'
 import * as actions from '@/lib/actions'
 import { useSelectedDate } from '@/lib/store/selectedData'
+import DeleteButton from '../general-components/delete-button'
+import EditButton from '../general-components/edit-button'
 
 type Plan = {
     _id: string
@@ -33,7 +35,6 @@ export default function PlansDetailsModal({ userPlan }: { userPlan: Plan }) {
                     lat: geo.lat,
                     lon: geo.lon,
                 })
-
                 setWeatherPreview(weather)
             } catch (err) {
                 console.error('Failed to fetch weather:', err)
@@ -48,7 +49,9 @@ export default function PlansDetailsModal({ userPlan }: { userPlan: Plan }) {
         <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
             <div onClick={(e) => e.stopPropagation()}
                 className="bg-white dark:bg-gray-900 max-w-md w-full p-6 rounded-2xl shadow-2xl relative">
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 flex gap-2 ml-auto">
+                    <EditButton id={userPlan._id}/>
+                    <DeleteButton id={userPlan._id} />
                     <CloseButton />
                 </div>
                 <div className="flex flex-col items-start gap-4">
@@ -66,7 +69,6 @@ export default function PlansDetailsModal({ userPlan }: { userPlan: Plan }) {
                             <span className="px-2 py-1 bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200 text-xs rounded-full">
                                 📍 {userPlan.location}
                             </span>
-
                             <span className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 text-xs rounded-full min-w-[1rem] flex items-center justify-center">
                                 {weatherPreview ? (
                                     <>
