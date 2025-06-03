@@ -36,7 +36,7 @@ More than code, I want to give this project **life and personality**, something 
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [OpenWeather API](https://openweathermap.org/api) for weather data
-- [Framer Motion](https://www.framer.com/motion/) for animations
+- [Maptiler](https://api.maptiler.com) to geocode location
 - [MongoDB](https://www.mongodb.com) to store data
 
 ---
