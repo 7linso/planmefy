@@ -25,6 +25,8 @@ export default function PlansForm() {
     const [showTime, setShowTime] = useState(false)
     const [showEndDate, setShowEndDate] = useState(false)
     const [showEventLocation, setShowEventLocation] = useState(false)
+    const [showRepeat, setShowRepeat] = useState(false)
+    const [repeatType, setRepeatType] = useState<string>('');
 
     const [icon, setIcon] = useState('⭐')
 
@@ -54,6 +56,8 @@ export default function PlansForm() {
             eventType: safeString(formData.get('eventType')),
             location: safeString(formData.get('location')),
             icon: formData.get('icon'),
+            repeatType: safeString(formData.get('repeatType')),
+            repeatOn: formData.getAll('repeatOn') as string[], 
         }
         const result = planSchema.safeParse(raw)
         console.log('Parsed result:', result)
@@ -68,7 +72,7 @@ export default function PlansForm() {
                 endTime: fieldErrors.endTime?.[0],
                 eventType: fieldErrors.eventType?.[0],
                 location: fieldErrors.location?.[0],
-                icon: fieldErrors.icon?.[0],
+                icon: fieldErrors.icon?.[0]
             })
             return
         }
@@ -182,13 +186,56 @@ export default function PlansForm() {
                 </div>
             </section>
             <section>
+                <p onClick={() => setShowRepeat((prev) => !prev)}
+                    className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
+                    {showRepeat ? '− Remove On Repeat' : '+ Select On Repeat'}
+                </p>
+                <div className={`transition-all duration-300 overflow-hidden 
+                    ${showRepeat ? 'max-h-[200px] opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
+                    }`} >
+                    <div className="my-4 space-y-4">
+                        <div className="grid grid-cols-2 gap-4 mb-3"> {[
+                            { label: 'Every Day', value: 'every-day' },
+                            { label: 'Every Week', value: 'every-week' },
+                            { label: 'Every Month', value: 'every-month' },
+                            { label: 'Every Year', value: 'every-year' },
+                            { label: 'Custom', value: 'custom' },]
+                            .map((opt) => (
+                                <label key={opt.value} className="flex items-center gap-2 text-sm">
+                                    <input type="radio" name="repeatType"
+                                        value={opt.value} checked={repeatType === opt.value}
+                                        onChange={(e) => setRepeatType(e.target.value)}
+                                        className="accent-blue-600" />
+                                    {opt.label}
+                                </label>
+                            ))}
+                        </div>
+                        <div className={`grid grid-cols-7 border rounded-md overflow-hidden max-w-full text-center ${repeatType !== 'custom' ? 'opacity-50 pointer-events-none' : ''}`} >
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                                .map((day) => (
+                                    <label key={day}
+                                        className="cursor-pointer text-xs font-medium hover:bg-gray-700 transition-colors dark:bg-gray-800 ">
+                                        <input type="checkbox" name="repeatOn" value={day}
+                                            disabled={repeatType !== 'custom'} className="sr-only peer" />
+                                        <span className="peer-checked:bg-gray-400 peer-checked:text-white px-2 py-2 block">
+                                            {day}
+                                        </span>
+                                    </label>
+                                ))
+                            }
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section>
                 <p onClick={() => setShowEventLocation((prev) => !prev)}
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
                     {showEventLocation ? '− Remove Event Location' : '+ Select Event Location'}
                 </p>
                 <div className={`transition-all duration-300 overflow-hidden 
                     ${showEventLocation ? 'max-h-40 opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
-                    }`} ><div className="grid grid-cols-2 gap-4 mb-3">
+                    }`} >
+                    <div className="grid grid-cols-2 gap-4 mb-3">
                         <label className="flex items-center gap-2 text-sm">
                             <input type="radio" id="indoor" name="eventType"
                                 value="indoor" className="accent-blue-600"

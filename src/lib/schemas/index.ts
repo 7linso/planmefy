@@ -14,7 +14,9 @@ export const planSchema = z.object({
     icon: z.union([
         z.string().emoji('Must be a valid emoji'),
         z.literal(''),
-    ])
+    ]),
+    repeatType: z.enum(['every-day', 'every-week', 'every-month', 'every-year', 'custom']).optional(),
+    repeatOn: z.array(z.string()).optional(),
 }).superRefine((data, ctx) => {
     if (!data.endDate && !data.startTime && !data.endTime) return
 
@@ -35,5 +37,21 @@ export const planSchema = z.object({
             message: 'End date must be after start date',
             path: ['endDate'],
         })
+    }
+
+    if (data.repeatType === 'custom') {
+        if (!data.repeatOn || data.repeatOn.length === 0) {
+            ctx.addIssue({
+                path: ['repeatOn'],
+                code: z.ZodIssueCode.custom,
+                message: 'Please select at least one day for custom repeat.',
+            });
+        }
+    } else if (data.repeatOn && data.repeatOn.length > 0) {
+        ctx.addIssue({
+            path: ['repeatOn'],
+            code: z.ZodIssueCode.custom,
+            message: 'repeatOn should be empty unless custom is selected.',
+        });
     }
 })

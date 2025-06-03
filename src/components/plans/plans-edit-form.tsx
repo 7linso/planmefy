@@ -17,7 +17,9 @@ interface Plan {
     endTime?: string
     eventType?: 'indoor' | 'outdoor'
     location?: string
-    icon: string
+    icon: string,
+    repeatType?: string,
+    repeatOn?: string[]
 }
 
 export default function PlansEditForm({ plan }: { plan: Plan }) {
@@ -29,6 +31,9 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
     const [showTime, setShowTime] = useState(!!(plan.startTime || plan.endTime))
     const [showEndDate, setShowEndDate] = useState(!!plan.endDate)
     const [showEventLocation, setShowEventLocation] = useState(!!plan.eventType || !!plan.location)
+    const [showRepeat, setShowRepeat] = useState(!!(plan.repeatType || (plan.repeatOn && plan.repeatOn.length)))
+
+    const [repeatType, setRepeatType] = useState<string>('custom');
 
     const [formData, setFormData] = useState({
         title: plan.title || '',
@@ -38,6 +43,9 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
         endTime: plan.endTime || '',
         eventType: plan.eventType || '',
         location: plan.location || '',
+        icon: plan.icon || '',
+        repeatType: plan.repeatType || '',
+        repeatOn: plan.repeatOn || []
     })
 
     const [weatherPreview, setWeatherPreview] = useState<null | { temp: number; rain: number }>(null)
@@ -76,6 +84,15 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
         setFormData((prev) => ({ ...prev, [name]: value }))
     }
 
+    const handleCheckboxChange = (day: string) => {
+        setFormData((prev) => {
+            const updated = prev.repeatOn.includes(day)
+                ? prev.repeatOn.filter((d) => d !== day)
+                : [...prev.repeatOn, day];
+            return { ...prev, repeatOn: updated };
+        });
+    };
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
 
@@ -89,7 +106,9 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
             eventType: formData.eventType || undefined,
             location: formData.location || undefined,
             icon: icon,
-        }
+            repeatType: formData.repeatType || undefined,
+            repeatOn: formData.repeatType === 'custom' ? formData.repeatOn : [],
+          };
         const result = planSchema.safeParse(raw)
         if (!result.success) {
             const fieldErrors = result.error.flatten().fieldErrors
@@ -103,13 +122,21 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                 eventType: fieldErrors.eventType?.[0],
                 location: fieldErrors.location?.[0],
                 icon: fieldErrors.icon?.[0],
+                repeatType: fieldErrors.icon?.[0],
+                repeatOn: fieldErrors.icon?.[0]
             })
             return
         }
         const data = new FormData()
         Object.entries(raw).forEach(([key, val]) => {
-            if (val) data.append(key, val)
-        })
+            if (!val) return;
+
+            if (Array.isArray(val)) {
+                val.forEach((item) => data.append(key, item));
+            } else {
+                data.append(key, val);
+            }
+        });
         try {
             await actions.updateUserPlan(data, plan._id)
         } catch (err) {
@@ -197,6 +224,58 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                 </div>
             </section>
             <section>
+                <p onClick={() => setShowRepeat((prev) => !prev)}
+                    className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
+                    {showRepeat ? '− Remove On Repeat' : '+ Select On Repeat'}
+                </p>
+                <div className={`transition-all duration-300 overflow-hidden ${showRepeat ? 'max-h-[400px] opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
+                    }`} >
+                    <div className="m-4 space-y-4">
+                        <div className="grid grid-cols-2 gap-4 mb-3"> {[
+                            { label: 'Every Day', value: 'every-day' },
+                            { label: 'Every Week', value: 'every-week' },
+                            { label: 'Every Month', value: 'every-month' },
+                            { label: 'Every Year', value: 'every-year' },
+                            { label: 'Custom Days', value: 'custom' },
+                        ].map((opt) => (
+                            <label key={opt.value} className="flex items-center gap-2 text-sm">
+                                <input type="radio" name="repeatType"
+                                    value={opt.value} checked={formData.repeatType === opt.value}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            repeatType: e.target.value,
+                                        }))
+                                    }
+                                    className="accent-blue-600" />
+                                {opt.label}
+                            </label>
+                        ))}
+                        </div>
+                        <div className={`grid grid-cols-7 border rounded-md overflow-hidden max-w-full text-center 
+                        ${formData.repeatType !== 'custom' ? 'opacity-50 pointer-events-none' : ''
+                            }`} >
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                                <label key={day}
+                                    className="cursor-pointer text-xs font-medium hover:bg-gray-700 transition-colors dark:bg-gray-800">
+                                    <input type="checkbox" name="repeatOn" value={day}
+                                        disabled={formData.repeatType !== 'custom'} checked={formData.repeatOn.includes(day)}
+                                        onChange={() => handleCheckboxChange(day)}
+                                        className="sr-only peer" />
+                                    <span className="peer-checked:bg-gray-400 peer-checked:text-white px-2 py-2 block">
+                                        {day}
+                                    </span>
+                                </label>
+                            ))}
+                            {errors.repeatOn && (
+                                <p className="text-red-500 text-sm mt-1">{errors.repeatOn}</p>
+                            )}
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section>
                 <p onClick={() => setShowEventLocation((prev) => !prev)}
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
                     {showEventLocation ? '− Remove Event Location' : '+ Select Event Location'}
@@ -238,7 +317,6 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                     </div>
                 </div>
             </section>
-
             <button type="submit"
                 className="p-2 rounded-md border bg-blue-600 text-white hover:bg-blue-700 transition">
                 Update

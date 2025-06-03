@@ -1,11 +1,12 @@
 'use server'
-import clientPromise from "../mongodb";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { planSchema } from "@/lib/schemas";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { ObjectId } from "mongodb";
+import clientPromise from "../mongodb"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { planSchema } from "@/lib/schemas"
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+import { ObjectId } from "mongodb"
+import { addDays, addWeeks, addMonths, isSameDay } from 'date-fns'
 
 export async function getAllUserPlans() {
     const session = await getServerSession(authOptions)
@@ -32,7 +33,9 @@ export async function getAllUserPlans() {
         endTime: isValidTime(plan.endTime) ? plan.endTime : null,
         eventType: plan.eventType,
         location: plan.location,
-        icon: plan.icon
+        icon: plan.icon,
+        repeatOn: plan.repeatOn,
+        repeatType: plan.repeatType
         // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
     }))
 }
@@ -73,7 +76,9 @@ export async function getUserPlansByDate(date: Date) {
         endTime: isValidTime(plan.endTime) ? plan.endTime : null,
         eventType: plan.eventType,
         location: plan.location,
-        icon: plan.icon
+        icon: plan.icon,
+        repeatOn: plan.repeatOn,
+        repeatType: plan.repeatType
 
         // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
     }))
@@ -112,7 +117,9 @@ export async function getUserPlansById(id: string, userId: string) {
         endTime: plan.endTime,
         eventType: plan.eventType,
         location: plan.location,
-        icon: plan.icon
+        icon: plan.icon,
+        repeatOn: plan.repeatOn,
+        repeatType: plan.repeatType
     }
 }
 
@@ -132,21 +139,71 @@ export async function postUserPlans(formData: FormData): Promise<void> {
         endTime: safeString(formData.get('endTime')),
         eventType: safeString(formData.get('eventType')),
         location: safeString(formData.get('location')),
-        icon: formData.get('icon')
+        icon: formData.get('icon'),
+        repeatType: safeString(formData.get('repeatType')),
+        repeatOn: (formData.getAll('repeatOn') as string[]),
     }
+
     const parsed = planSchema.safeParse(raw)
     if (!parsed.success) {
         console.error(parsed.error.flatten())
         throw new Error('Invalid Input')
     }
+
+    const data = parsed.data
+    const baseDate = new Date(data.startDate)
+    const plans: any[] = []
+
+    if (!data.repeatType) {
+        plans.push({
+            userId: session.user.id,
+            ...data,
+            created_at: new Date()
+        })
+    } else {
+        let currentDate = baseDate
+        let count = 0
+
+        while (plans.length < 30 && count < 365) {
+            let include = false
+
+            if (data.repeatType === 'every-day') {
+                include = true
+            } else if (data.repeatType === 'every-week') {
+                include = true
+            } else if (data.repeatType === 'every-month') {
+                include = true
+            } else if (data.repeatType === 'custom') {
+                const dayStr = currentDate.toLocaleDateString('en-US', { weekday: 'short' })
+                if (data.repeatOn && data.repeatOn.includes(dayStr)) {
+                    include = true
+                }
+            }
+
+            if (include) {
+                plans.push({
+                    userId: session.user.id,
+                    ...data,
+                    startDate: currentDate.toISOString().split('T')[0],
+                    created_at: new Date()
+                })
+            }
+            if (data.repeatType === 'every-day' || data.repeatType === 'custom') {
+                currentDate = addDays(currentDate, 1)
+            } else if (data.repeatType === 'every-week') {
+                currentDate = addWeeks(currentDate, 1)
+            } else if (data.repeatType === 'every-month') {
+                currentDate = addMonths(currentDate, 1)
+            }
+            count++
+        }
+
+    }
+
     const client = await clientPromise
     const db = client.db('test')
+    await db.collection('plans').insertMany(plans)
 
-    await db.collection('plans').insertOne({
-        userId: session.user.id,
-        ...parsed.data,
-        created_at: new Date()
-    })
     revalidatePath('/calendar')
     redirect('/calendar')
 }
@@ -190,14 +247,17 @@ export async function updateUserPlan(formData: FormData, id: string) {
         endTime: safeString(formData.get('endTime')),
         eventType: safeString(formData.get('eventType')),
         location: safeString(formData.get('location')),
-        icon: formData.get('icon')
+        icon: formData.get('icon'),
+        repeatType: safeString(formData.get('repeatType')),
+        repeatOn: (formData.getAll('repeatOn') as string[]),
     }
     const parsed = planSchema.safeParse(raw)
+    console.log('Submitting raw:', raw)
+
     if (!parsed.success) {
         console.error(parsed.error.flatten())
         throw new Error('Invalid Input')
     }
-
     const client = await clientPromise
     const db = client.db('test')
 
