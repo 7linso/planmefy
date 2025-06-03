@@ -163,11 +163,13 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
                     {showEndDate ? '− Remove End Date' : '+ Set End Date'}
                 </p>
-                {showEndDate && (
+                <div className={`transition-all duration-300 overflow-hidden 
+                    ${showEndDate ? 'max-h-40 opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
+                    }`} >
                     <input type="date" name="endDate" value={formData.endDate}
                         onChange={handleChange}
                         className="w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
-                )}
+                </div>
                 {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
             </section>
             <section>
@@ -175,7 +177,9 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
                     {showTime ? '− Remove Time Range' : '+ Set Time Range'}
                 </p>
-                {showTime && (
+                <div className={`transition-all duration-300 overflow-hidden 
+                    ${showTime ? 'max-h-40 opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
+                    }`} >
                     <div className="grid grid-cols-2 gap-4 mt-2">
                         <div>
                             <label htmlFor="startTime" className="block text-sm mb-1">Start Time</label>
@@ -190,49 +194,49 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                                 className="w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
                         </div>
                     </div>
-                )}
+                </div>
             </section>
             <section>
                 <p onClick={() => setShowEventLocation((prev) => !prev)}
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
                     {showEventLocation ? '− Remove Event Location' : '+ Select Event Location'}
                 </p>
-                {showEventLocation && (
-                    <>
-                        <div className="grid grid-cols-2 gap-4 mb-3">
-                            <label className="flex items-center gap-2 text-sm">
-                                <input type="radio" name="eventType" value="indoor"
-                                    checked={formData.eventType === 'indoor'}
-                                    onChange={handleChange} className="accent-blue-600" />
-                                Indoor
-                            </label>
-                            <label className="flex items-center gap-2 text-sm">
-                                <input type="radio" name="eventType" value="outdoor"
-                                    checked={formData.eventType === 'outdoor'}
-                                    onChange={handleChange} className="accent-blue-600" />
-                                Outdoor
-                            </label>
-                        </div>
-                        <LocationInput prevLocation={formData.location}
-                            onSelect={(location) => {
-                                console.log('Selected:', location)
-                                setFormData((prev) => ({ ...prev, location }))
-                            }}
-                        />
-                        <div className="text-sm mt-4 text-gray-400">
-                            🌤 Forecast for {selectedDate.toISOString().split('T')[0]}:{' '}
-                            <br />
-                            {weatherPreview ? (
-                                <>
-                                    <strong>{weatherPreview.temp}°C</strong>,{' '}
-                                    {weatherPreview.rain > 0 ? `🌧 ${weatherPreview.rain}mm rain` : 'no rain expected'}
-                                </>
-                            ) : (
-                                <div className="h-5 w-48 mt-2 bg-gray-300 dark:bg-gray-700 rounded animate-pulse" />
-                            )}
-                        </div>
-                    </>
-                )}
+                <div className={`transition-all duration-300 overflow-hidden 
+                    ${showEventLocation ? 'max-h-40 opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
+                    }`} >
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                        <label className="flex items-center gap-2 text-sm">
+                            <input type="radio" name="eventType" value="indoor"
+                                checked={formData.eventType === 'indoor'}
+                                onChange={handleChange} className="accent-blue-600" />
+                            Indoor
+                        </label>
+                        <label className="flex items-center gap-2 text-sm">
+                            <input type="radio" name="eventType" value="outdoor"
+                                checked={formData.eventType === 'outdoor'}
+                                onChange={handleChange} className="accent-blue-600" />
+                            Outdoor
+                        </label>
+                    </div>
+                    <LocationInput prevLocation={formData.location}
+                        onSelect={(location) => {
+                            console.log('Selected:', location)
+                            setFormData((prev) => ({ ...prev, location }))
+                        }}
+                    />
+                    <div className="text-sm mt-4 text-gray-400">
+                        🌤 Forecast for {selectedDate.toISOString().split('T')[0]}:{' '}
+                        <br />
+                        {weatherPreview ? (
+                            <>
+                                <strong>{weatherPreview.temp}°C</strong>,{' '}
+                                {weatherPreview.rain > 0 ? `🌧 ${weatherPreview.rain}mm rain` : 'no rain expected'}
+                            </>
+                        ) : (
+                            <div className="h-5 w-48 mt-2 bg-gray-300 dark:bg-gray-700 rounded animate-pulse" />
+                        )}
+                    </div>
+                </div>
             </section>
 
             <button type="submit"

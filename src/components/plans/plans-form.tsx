@@ -114,8 +114,8 @@ export default function PlansForm() {
         </div>
         <form className="m-2 space-y-6"
             ref={formRef} onSubmit={handleSubmit}>
-            <section className="flex items-center gap-3 mb-4">
-                <div className="flex-1">
+            <section className="flex items-center justify-center gap-3 mb-4 flex-wrap">
+                <div className="flex-1 min-w-[200px]">
                     <label htmlFor="title" className="block text-sm font-medium mb-1">
                         Title
                     </label>
@@ -149,19 +149,22 @@ export default function PlansForm() {
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
                     {showEndDate ? '− Remove End Date' : '+ Set End Date'}
                 </p>
-                {showEndDate && (<>
+                <div className={`transition-all duration-300 overflow-hidden 
+                    ${showEndDate ? 'max-h-40 opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
+                    }`} >
                     <input type="date" name="endDate"
                         className="mt-2 w-full px-4 py-2 rounded-md border dark:bg-gray-800" />
                     {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
-                </>
-                )}
+                </div>
             </section>
             <section>
                 <p onClick={() => setShowTime((prev) => !prev)}
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
                     {showTime ? '− Remove Time Range' : '+ Set Time Range'}
                 </p>
-                {showTime && (
+                <div className={`transition-all duration-300 overflow-hidden 
+                    ${showTime ? 'max-h-40 opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
+                    }`} >
                     <div className="grid grid-cols-2 gap-4 mt-2">
                         <div>
                             <label htmlFor="startTime" className="block text-sm mb-1">Start Time</label>
@@ -176,45 +179,44 @@ export default function PlansForm() {
                             {errors.endTime && <p className="text-red-500 text-sm mt-1">{errors.endTime}</p>}
                         </div>
                     </div>
-                )}
+                </div>
             </section>
             <section>
                 <p onClick={() => setShowEventLocation((prev) => !prev)}
                     className="text-sm text-gray-400 hover:underline cursor-pointer mb-2">
                     {showEventLocation ? '− Remove Event Location' : '+ Select Event Location'}
                 </p>
-                {showEventLocation && (
-                    <>
-                        <div className="grid grid-cols-2 gap-4 mb-3">
-                            <label className="flex items-center gap-2 text-sm">
-                                <input type="radio" id="indoor" name="eventType"
-                                    value="indoor" className="accent-blue-600"
-                                    onChange={(e) => setFormState((prev) => ({ ...prev, eventType: e.target.value }))} />
-                                Indoor
-                            </label>
-                            <label className="flex items-center gap-2 text-sm">
-                                <input type="radio" id="outdoor" name="eventType"
-                                    value="outdoor" className="accent-blue-600"
-                                    onChange={(e) => setFormState((prev) => ({ ...prev, eventType: e.target.value }))} />
-                                Outdoor
-                            </label>
-                        </div>
-                        <LocationInput onSelect={(location) => {
-                            console.log('Selected:', location)
-                            setFormState((prev) => ({ ...prev, location: location }))
-                        }} />
-                        <div className="text-sm mt-4 text-gray-400">
-                            🌤 Forecast for that location on {selectedDate.toISOString().split('T')[0]}:{' '}
-                            <br />
-                            {weatherPreview ? (<>
-                                <strong>{weatherPreview.temp}°C</strong>, {' '}
-                                {weatherPreview.rain > 0 ? `🌧 ${weatherPreview.rain}mm rain` : 'no rain expected'}
-                            </>)
-                                :
-                                (<div className="h-5 w-48 mt-2 bg-gray-300 dark:bg-gray-700 rounded animate-pulse" />)}
-                        </div>
-                    </>
-                )}
+                <div className={`transition-all duration-300 overflow-hidden 
+                    ${showEventLocation ? 'max-h-40 opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95'
+                    }`} ><div className="grid grid-cols-2 gap-4 mb-3">
+                        <label className="flex items-center gap-2 text-sm">
+                            <input type="radio" id="indoor" name="eventType"
+                                value="indoor" className="accent-blue-600"
+                                onChange={(e) => setFormState((prev) => ({ ...prev, eventType: e.target.value }))} />
+                            Indoor
+                        </label>
+                        <label className="flex items-center gap-2 text-sm">
+                            <input type="radio" id="outdoor" name="eventType"
+                                value="outdoor" className="accent-blue-600"
+                                onChange={(e) => setFormState((prev) => ({ ...prev, eventType: e.target.value }))} />
+                            Outdoor
+                        </label>
+                    </div>
+                    <LocationInput onSelect={(location) => {
+                        console.log('Selected:', location)
+                        setFormState((prev) => ({ ...prev, location: location }))
+                    }} />
+                    <div className="text-sm mt-4 text-gray-400">
+                        🌤 Forecast for that location on {selectedDate.toISOString().split('T')[0]}:{' '}
+                        <br />
+                        {weatherPreview ? (<>
+                            <strong>{weatherPreview.temp}°C</strong>, {' '}
+                            {weatherPreview.rain > 0 ? `🌧 ${weatherPreview.rain}mm rain` : 'no rain expected'}
+                        </>)
+                            :
+                            (<div className="h-5 w-48 mt-2 bg-gray-300 dark:bg-gray-700 rounded animate-pulse" />)}
+                    </div>
+                </div>
             </section>
             <button type="submit" className="p-2 rounded-md border bg-blue-600 text-white hover:bg-blue-700 transition">
                 Submit
