@@ -1,7 +1,7 @@
 'use client'
+
 import { useRef, useState, useEffect } from 'react'
 import * as actions from '@/lib/actions'
-import { planSchema } from '@/lib/schemas'
 import { useSelectedDate } from '@/lib/store/selectedData'
 import Link from 'next/link'
 import EmojiSelector from './emoji-picker'
@@ -10,73 +10,42 @@ import LocationInput from '../general-components/location-input'
 export default function PlansForm() {
     const { selectedDate, setSelectedDate } = useSelectedDate()
     const formRef = useRef<HTMLFormElement>(null)
-    const [errors, setErrors] = useState<{
-        title?: string
-        note?: string
-        startDate?: string
-        endDate?: string
-        startTime?: string
-        endTime?: string,
-        eventType?: string
-        location?: string,
-        icon?: string
-    }>({})
 
+    const [errors, setErrors] = useState<Record<string, string | undefined>>({})
     const [showTime, setShowTime] = useState(false)
     const [showEndDate, setShowEndDate] = useState(false)
     const [showEventLocation, setShowEventLocation] = useState(false)
     const [showRepeat, setShowRepeat] = useState(false)
-    const [repeatType, setRepeatType] = useState<string>('');
-
+    const [repeatType, setRepeatType] = useState('')
     const [icon, setIcon] = useState('⭐')
-
     const [formState, setFormState] = useState({
         location: '',
         eventType: '',
     })
 
     const [weatherPreview, setWeatherPreview] = useState<null | { temp: number; rain: number }>(null)
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         const form = formRef.current
         if (!form) return
+
         const formData = new FormData(form)
         formData.set('icon', icon)
+        formData.set('startDate', selectedDate.toISOString().split('T')[0])
 
-        const safeString = (v: FormDataEntryValue | null) =>
-            typeof v === 'string' && v.trim() !== '' ? v : undefined
+        const raw = Object.fromEntries(formData.entries()) as Record<string, string | string[]>
+        raw.startDate = selectedDate.toISOString().split('T')[0]
+        raw.repeatOn = formData.getAll('repeatOn') as string[]
 
-        const raw = {
-            title: formData.get('title') as string,
-            note: safeString(formData.get('note')),
-            startDate: selectedDate.toISOString().split('T')[0],
-            endDate: safeString(formData.get('endDate')),
-            startTime: safeString(formData.get('startTime')),
-            endTime: safeString(formData.get('endTime')),
-            eventType: safeString(formData.get('eventType')),
-            location: safeString(formData.get('location')),
-            icon: formData.get('icon'),
-            repeatType: safeString(formData.get('repeatType')),
-            repeatOn: formData.getAll('repeatOn') as string[], 
-        }
-        const result = planSchema.safeParse(raw)
-        console.log('Parsed result:', result)
-        if (!result.success) {
-            const fieldErrors = result.error.flatten().fieldErrors
-            setErrors({
-                title: fieldErrors.title?.[0],
-                note: fieldErrors.note?.[0],
-                startDate: fieldErrors.startDate?.[0],
-                endDate: fieldErrors.endDate?.[0],
-                startTime: fieldErrors.startTime?.[0],
-                endTime: fieldErrors.endTime?.[0],
-                eventType: fieldErrors.eventType?.[0],
-                location: fieldErrors.location?.[0],
-                icon: fieldErrors.icon?.[0]
-            })
+        console.log('Parsed result:', raw)
+        const errors = await actions.validateBasicPlan(raw)
+
+        if (Object.keys(errors).length > 0) {
+            setErrors(errors)
             return
         }
-        setErrors({})
+        
         try {
             await actions.postUserPlans(formData)
         } catch (err) {

@@ -2,55 +2,57 @@
 import clientPromise from "../mongodb"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { planSchema } from "@/lib/schemas"
+import { recurringPlanSchema, singleInstancePlanSchema } from '@/lib/schemas'
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { ObjectId } from "mongodb"
 import { addDays, addWeeks, addMonths, isSameDay } from 'date-fns'
+import { z } from 'zod'
 
-export async function getAllUserPlans() {
-    const session = await getServerSession(authOptions)
-    if (!session || !session.user)
-        throw new Error("Not authenticated")
+// export async function getAllUserPlans() {
+//     const session = await getServerSession(authOptions)
+//     if (!session || !session.user)
+//         throw new Error("Not authenticated")
 
-    const client = await clientPromise
-    const db = client.db('test')
-    const plans = await db.collection('plans')
-        .find({ userId: session.user.id })
-        .sort({ createdAt: -1 })
-        .toArray()
+//     const client = await clientPromise
+//     const db = client.db('test')
+//     const plans = await db.collection('plans')
+//         .find({ userId: session.user.id })
+//         .sort({ createdAt: -1 })
+//         .toArray()
 
-    const isValidTime = (value: any): value is string =>
-        typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)
+//     const isValidTime = (value: any): value is string =>
+//         typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)
 
-    return plans.map((plan) => ({
-        _id: plan._id.toString(),
-        title: plan.title,
-        note: plan.note,
-        startDate: plan.startDate ?? null,
-        endDate: plan.endDate ?? null,
-        startTime: isValidTime(plan.startTime) ? plan.startTime : null,
-        endTime: isValidTime(plan.endTime) ? plan.endTime : null,
-        eventType: plan.eventType,
-        location: plan.location,
-        icon: plan.icon,
-        repeatOn: plan.repeatOn,
-        repeatType: plan.repeatType
-        // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
-    }))
-}
+//     return plans.map((plan) => ({
+//         _id: plan._id.toString(),
+//         title: plan.title,
+//         note: plan.note,
+//         startDate: plan.startDate ?? null,
+//         endDate: plan.endDate ?? null,
+//         startTime: isValidTime(plan.startTime) ? plan.startTime : null,
+//         endTime: isValidTime(plan.endTime) ? plan.endTime : null,
+//         eventType: plan.eventType,
+//         location: plan.location,
+//         icon: plan.icon,
+//         repeatOn: plan.repeatOn,
+//         repeatType: plan.repeatType
+//         // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
+//     }))
+// }
 
 export async function getUserPlansByDate(date: Date) {
     const session = await getServerSession(authOptions)
-    if (!session || !session.user)
-        throw new Error("Not authenticated")
+
+    if (!session?.user?.id) {
+        throw new Error('Not authenticated')
+    }
 
     const client = await clientPromise
     const db = client.db('test')
-
     const dateStr = date.toISOString().split('T')[0]
 
-    const plans = await db.collection('plans')
+    const plans = await db.collection('plan_instances')
         .find({
             userId: session.user.id,
             startDate: { $lte: dateStr },
@@ -60,6 +62,7 @@ export async function getUserPlansByDate(date: Date) {
                 { endDate: { $exists: false }, startDate: dateStr },
             ]
         })
+
         .sort({ createdAt: -1 })
         .toArray()
 
@@ -69,63 +72,67 @@ export async function getUserPlansByDate(date: Date) {
     return plans.map((plan) => ({
         _id: plan._id.toString(),
         title: plan.title,
-        note: plan.note,
-        startDate: plan.startDate ?? null,
-        endDate: plan.endDate ?? null,
-        startTime: isValidTime(plan.startTime) ? plan.startTime : null,
-        endTime: isValidTime(plan.endTime) ? plan.endTime : null,
-        eventType: plan.eventType,
-        location: plan.location,
-        icon: plan.icon,
-        repeatOn: plan.repeatOn,
-        repeatType: plan.repeatType
-
-        // created_at: plan.created_at?.toISOString?.() ?? new Date().toISOString(),
+        note: plan.note ?? undefined,
+        startDate: plan.startDate ?? undefined,
+        endDate: plan.endDate ?? undefined,
+        startTime: isValidTime(plan.startTime) ? plan.startTime : undefined,
+        endTime: isValidTime(plan.endTime) ? plan.endTime : undefined,
+        eventType: plan.eventType ?? undefined,
+        location: plan.location ?? undefined,
+        icon: plan.icon ?? '⭐',
+        repeatOn: Array.isArray(plan.repeatOn) ? plan.repeatOn : [],
+        repeatType: plan.repeatType ?? undefined,
+        createdAt: plan.createdAt?.toISOString?.() ?? new Date().toISOString(),
     }))
+
 }
 
 export async function getUserPlansById(id: string, userId: string) {
     const client = await clientPromise
     const db = client.db('test')
 
-    let objectId
+    let objectId: ObjectId
     try {
         objectId = new ObjectId(id)
     } catch (err) {
         console.warn('[Invalid ObjectId]', id)
         return null
     }
-    console.log('[getUserPlansById] ID:', id)
-    console.log('[getUserPlansById] userId:', userId)
 
-    const plan = await db.collection('plans').findOne({
+    const plan = await db.collection('plan_instances').findOne({
         _id: objectId,
-        userId,
+        userId
     })
 
     if (!plan) {
-        console.warn('[Plan not found]', { _id: objectId.toString(), userId })
+        console.warn('[Plan not found]', { _id: id, userId })
         return null
     }
+
+    const isValidTime = (value: any): value is string =>
+        typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)
+
     return {
         _id: plan._id.toString(),
         title: plan.title,
-        note: plan.note,
+        note: plan.note ?? undefined,
         startDate: plan.startDate,
-        endDate: plan.endDate,
-        startTime: plan.startTime,
-        endTime: plan.endTime,
-        eventType: plan.eventType,
-        location: plan.location,
-        icon: plan.icon,
-        repeatOn: plan.repeatOn,
-        repeatType: plan.repeatType
+        endDate: plan.endDate ?? undefined,
+        startTime: isValidTime(plan.startTime) ? plan.startTime : undefined,
+        endTime: isValidTime(plan.endTime) ? plan.endTime : undefined,
+        eventType: plan.eventType ?? undefined,
+        location: plan.location ?? undefined,
+        icon: plan.icon ?? '',
+        repeatType: plan.repeatType ?? undefined,
+        repeatOn: plan.repeatOn ?? [],
     }
 }
 
+type RecurringPlan = z.infer<typeof recurringPlanSchema>
+
 export async function postUserPlans(formData: FormData): Promise<void> {
     const session = await getServerSession(authOptions)
-    if (!session || !session.user) throw new Error("Not authenticated")
+    if (!session?.user) throw new Error('Not authenticated')
 
     const safeString = (v: FormDataEntryValue | null) =>
         typeof v === 'string' && v.trim() !== '' ? v : undefined
@@ -141,99 +148,197 @@ export async function postUserPlans(formData: FormData): Promise<void> {
         location: safeString(formData.get('location')),
         icon: formData.get('icon'),
         repeatType: safeString(formData.get('repeatType')),
-        repeatOn: (formData.getAll('repeatOn') as string[]),
+        repeatOn: formData.getAll('repeatOn') as string[],
     }
 
-    const parsed = planSchema.safeParse(raw)
+    const isRepeating = !!raw.repeatType
+    const parsed = isRepeating
+        ? recurringPlanSchema.safeParse(raw)
+        : singleInstancePlanSchema.safeParse(raw)
+
     if (!parsed.success) {
         console.error(parsed.error.flatten())
-        throw new Error('Invalid Input')
+        throw new Error('Invalid input')
     }
 
     const data = parsed.data
+    const userId = session.user.id
     const baseDate = new Date(data.startDate)
-    const plans: any[] = []
 
-    if (!data.repeatType) {
-        plans.push({
-            userId: session.user.id,
+    const client = await clientPromise
+    const db = client.db('test')
+
+    if (!isRepeating) {
+        await db.collection('plan_instances').insertOne({
+            userId,
             ...data,
             created_at: new Date()
         })
     } else {
-        let currentDate = baseDate
+        const recurringData = data as RecurringPlan
+
+        const { insertedId } = await db.collection('recurring_plans').insertOne({
+            userId,
+            title: recurringData.title,
+            note: recurringData.note,
+            startTime: recurringData.startTime,
+            endTime: recurringData.endTime,
+            eventType: recurringData.eventType,
+            location: recurringData.location,
+            icon: recurringData.icon,
+            repeatType: recurringData.repeatType,
+            repeatOn: recurringData.repeatOn,
+            startDate: recurringData.startDate,
+            endDate: recurringData.endDate,
+            created_at: new Date()
+        })
+
+        const instances: any[] = []
+        let currentDate = new Date(recurringData.startDate)
         let count = 0
 
-        while (plans.length < 30 && count < 365) {
+        while (instances.length < 30 && count < 365) {
             let include = false
+            const dayStr = currentDate.toLocaleDateString('en-US', { weekday: 'short' })
 
-            if (data.repeatType === 'every-day') {
+            if (recurringData.repeatType === 'every-day') include = true
+            else if (recurringData.repeatType === 'every-week') include = true
+            else if (recurringData.repeatType === 'every-month') include = true
+            else if (
+                recurringData.repeatType === 'custom' &&
+                recurringData.repeatOn?.includes(dayStr)
+            ) {
                 include = true
-            } else if (data.repeatType === 'every-week') {
-                include = true
-            } else if (data.repeatType === 'every-month') {
-                include = true
-            } else if (data.repeatType === 'custom') {
-                const dayStr = currentDate.toLocaleDateString('en-US', { weekday: 'short' })
-                if (data.repeatOn && data.repeatOn.includes(dayStr)) {
-                    include = true
-                }
             }
 
             if (include) {
-                plans.push({
-                    userId: session.user.id,
-                    ...data,
+                instances.push({
+                    userId,
+                    recurringId: insertedId,
+                    title: recurringData.title,
+                    note: recurringData.note,
+                    location: recurringData.location,
+                    eventType: recurringData.eventType,
+                    icon: recurringData.icon,
                     startDate: currentDate.toISOString().split('T')[0],
+                    startTime: recurringData.startTime,
+                    endDate: recurringData.endDate,
+                    endTime: recurringData.endTime,
                     created_at: new Date()
                 })
             }
-            if (data.repeatType === 'every-day' || data.repeatType === 'custom') {
+
+            if (['every-day', 'custom'].includes(recurringData.repeatType))
                 currentDate = addDays(currentDate, 1)
-            } else if (data.repeatType === 'every-week') {
+            else if (recurringData.repeatType === 'every-week')
                 currentDate = addWeeks(currentDate, 1)
-            } else if (data.repeatType === 'every-month') {
+            else if (recurringData.repeatType === 'every-month')
                 currentDate = addMonths(currentDate, 1)
-            }
+
             count++
         }
 
+        if (instances.length > 0) {
+            await db.collection('plan_instances').insertMany(instances)
+        }
     }
-
-    const client = await clientPromise
-    const db = client.db('test')
-    await db.collection('plans').insertMany(plans)
 
     revalidatePath('/calendar')
     redirect('/calendar')
 }
 
-export async function deleteUserPlan(id: string) {
-    const session = await getServerSession(authOptions)
-    if (!session || !session.user)
-        throw new Error("Not authenticated")
+export async function validateBasicPlan(raw: Record<string, any>) {
+    const errors: Record<string, string | undefined> = {}
 
-    const client = await clientPromise
-    const db = client.db('test')
-    try {
-        const result = await db.collection("plans").deleteOne({
-            userId: session.user.id,
-            _id: new ObjectId(id),
-        });
-
-        if (result.deletedCount === 0) {
-            throw new Error("Plan not found or not owned by user");
-        }
-    } catch (err) {
-        console.error("Delete failed:", err);
+    if (!raw.title || raw.title.trim().length < 3) {
+        errors.title = 'Title must be at least 3 characters long'
     }
-    revalidatePath('/calendar')
+
+    if (!raw.startDate) {
+        errors.startDate = 'Start date is required'
+    }
+
+    if (raw.endDate && raw.startDate) {
+        const start = new Date(`${raw.startDate}T${raw.startTime ?? '00:00'}`)
+        const end = new Date(`${raw.endDate}T${raw.endTime ?? '23:59'}`)
+
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            errors.endDate = 'Invalid date format'
+        } else if (start > end) {
+            errors.endDate = 'End date/time must be after start'
+            errors.endTime = 'End time must be after start time'
+        }
+    }
+
+    if (raw.repeatType === 'custom' && (!raw.repeatOn || raw.repeatOn.length === 0)) {
+        errors.repeatOn = 'Select at least one day'
+    }
+
+    return errors
 }
 
-export async function updateUserPlan(formData: FormData, id: string) {
+export async function deleteUserPlan(id: string, targetType: 'instance' | 'recurring') {
     const session = await getServerSession(authOptions)
-    if (!session || !session.user)
-        throw new Error("Not authenticated")
+    if (!session?.user?.id) throw new Error("Not authenticated")
+
+    const userId = session.user.id
+    const client = await clientPromise
+    const db = client.db('test')
+
+    let _id: ObjectId
+    try {
+        _id = new ObjectId(id)
+    } catch (err) {
+        console.error('[Invalid ObjectId]', id)
+        throw new Error("Invalid plan ID")
+    }
+
+    try {
+        if (targetType === 'instance') {
+            const result = await db.collection('plan_instances').deleteOne({
+                _id,
+                userId: String(userId), 
+            })
+
+            if (result.deletedCount === 0) {
+                console.warn('[Instance not deleted]', { _id: id, userId })
+                throw new Error("Plan instance not found or not owned by user")
+            }
+
+        } else if (targetType === 'recurring') {
+            const instancesResult = await db.collection('plan_instances').deleteMany({
+                recurringId: _id,
+                userId: String(userId),
+            })
+
+            const recurringResult = await db.collection('recurring_plans').deleteOne({
+                _id,
+                userId: String(userId),
+            })
+
+            if (recurringResult.deletedCount === 0) {
+                console.warn('[Recurring not deleted]', { _id: id, userId })
+                throw new Error("Recurring plan not found or not owned by user")
+            }
+            // console.log(`[Deleted] ${instancesResult.deletedCount} instances + recurring rule`)
+        }
+
+        revalidatePath('/calendar')
+    } catch (err) {
+        console.error("Delete failed:", err)
+        throw new Error("Failed to delete plan")
+    }
+}
+
+type TargetType = 'instance' | 'recurring'
+
+export async function updateUserPlan(
+    formData: FormData,
+    id: string,
+    targetType: TargetType
+) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) throw new Error('Not authenticated')
 
     const safeString = (v: FormDataEntryValue | null) =>
         typeof v === 'string' && v.trim() !== '' ? v : undefined
@@ -249,25 +354,45 @@ export async function updateUserPlan(formData: FormData, id: string) {
         location: safeString(formData.get('location')),
         icon: formData.get('icon'),
         repeatType: safeString(formData.get('repeatType')),
-        repeatOn: (formData.getAll('repeatOn') as string[]),
+        repeatOn: formData.getAll('repeatOn') as string[],
     }
-    const parsed = planSchema.safeParse(raw)
-    console.log('Submitting raw:', raw)
+
+    const parsed =
+        targetType === 'recurring'
+            ? recurringPlanSchema.safeParse(raw)
+            : singleInstancePlanSchema.safeParse(raw)
 
     if (!parsed.success) {
-        console.error(parsed.error.flatten())
+        console.error('[Validation Error]', parsed.error.flatten())
         throw new Error('Invalid Input')
     }
+
+    const data = parsed.data
+    const userId = session.user.id
     const client = await clientPromise
     const db = client.db('test')
 
-    await db.collection('plans').updateOne({
-        userId: session.user.id,
-        _id: new ObjectId(id),
-    }, { $set: parsed.data })
+    const _id = new ObjectId(id)
+
+    if (targetType === 'recurring') {
+        await db.collection('recurring_plans').updateOne(
+            { _id, userId },
+            { $set: data }
+        )
+    } else {
+        await db.collection('plan_instances').updateOne(
+            { _id, userId },
+            {
+                $set: {
+                    ...data,
+                    isException: true,
+                },
+            }
+        )
+    }
 
     revalidatePath('/calendar')
-    redirect(`/calendar`)
+    redirect('/calendar')
 }
 
 export async function getCoordsForLocation(location: string) {
