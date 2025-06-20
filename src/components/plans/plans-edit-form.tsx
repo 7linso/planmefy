@@ -1,11 +1,12 @@
 'use client'
+
 import { useEffect, useRef, useState } from 'react'
 import * as actions from '@/lib/actions'
-import { planSchema } from '@/lib/schemas'
 import { useSelectedDate } from '@/lib/store/selectedData'
 import Link from 'next/link'
 import EmojiSelector from './emoji-picker'
 import LocationInput from '../general-components/location-input'
+import DeleteButton from '../general-components/delete-button'
 
 interface Plan {
     _id: string
@@ -17,23 +18,31 @@ interface Plan {
     endTime?: string
     eventType?: 'indoor' | 'outdoor'
     location?: string
-    icon: string,
-    repeatType?: string,
+    icon: string
+    repeatType?: string
     repeatOn?: string[]
+    recurringId?: string
 }
 
-export default function PlansEditForm({ plan }: { plan: Plan }) {
+interface Props {
+    plan: Plan
+    targetType: 'instance' | 'recurring'
+}
+
+export default function PlansEditForm({ plan, targetType }: Props) {
     const formRef = useRef<HTMLFormElement>(null)
     const { selectedDate, setSelectedDate } = useSelectedDate()
     const [icon, setIcon] = useState(plan.icon || '⭐')
-    const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({})
+    const [errors, setErrors] = useState<Record<string, string | undefined>>({})
+    const [weatherPreview, setWeatherPreview] = useState<null | { temp: number; rain: number }>(null)
 
     const [showTime, setShowTime] = useState(!!(plan.startTime || plan.endTime))
     const [showEndDate, setShowEndDate] = useState(!!plan.endDate)
     const [showEventLocation, setShowEventLocation] = useState(!!plan.eventType || !!plan.location)
-    const [showRepeat, setShowRepeat] = useState(!!(plan.repeatType || (plan.repeatOn && plan.repeatOn.length)))
+    const [showRepeat, setShowRepeat] = useState(!!plan.repeatType || !!(plan.repeatOn?.length))
 
-    const [repeatType, setRepeatType] = useState<string>('custom');
+    const [applyToAll, setApplyToAll] = useState(targetType === 'recurring')
+    const [deleteAll, setDeleteAll] = useState(false)
 
     const [formData, setFormData] = useState({
         title: plan.title || '',
@@ -43,17 +52,12 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
         endTime: plan.endTime || '',
         eventType: plan.eventType || '',
         location: plan.location || '',
-        icon: plan.icon || '',
         repeatType: plan.repeatType || '',
         repeatOn: plan.repeatOn || []
     })
 
-    const [weatherPreview, setWeatherPreview] = useState<null | { temp: number; rain: number }>(null)
-
     useEffect(() => {
-        if (plan.startDate) {
-            setSelectedDate(new Date(plan.startDate))
-        }
+        if (plan.startDate) setSelectedDate(new Date(plan.startDate))
     }, [plan.startDate, setSelectedDate])
 
     useEffect(() => {
@@ -77,9 +81,7 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
         return () => clearTimeout(timeout)
     }, [formData.location, selectedDate])
 
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
         setFormData((prev) => ({ ...prev, [name]: value }))
     }
@@ -88,57 +90,36 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
         setFormData((prev) => {
             const updated = prev.repeatOn.includes(day)
                 ? prev.repeatOn.filter((d) => d !== day)
-                : [...prev.repeatOn, day];
-            return { ...prev, repeatOn: updated };
-        });
-    };
+                : [...prev.repeatOn, day]
+            return { ...prev, repeatOn: updated }
+        })
+    }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
+        const form = formRef.current
+        if (!form) return
 
-        const raw = {
-            title: formData.title,
-            note: formData.note,
-            startDate: selectedDate.toISOString().split('T')[0],
-            endDate: formData.endDate || undefined,
-            startTime: formData.startTime || undefined,
-            endTime: formData.endTime || undefined,
-            eventType: formData.eventType || undefined,
-            location: formData.location || undefined,
-            icon: icon,
-            repeatType: formData.repeatType || undefined,
-            repeatOn: formData.repeatType === 'custom' ? formData.repeatOn : [],
-          };
-        const result = planSchema.safeParse(raw)
-        if (!result.success) {
-            const fieldErrors = result.error.flatten().fieldErrors
-            setErrors({
-                title: fieldErrors.title?.[0],
-                note: fieldErrors.note?.[0],
-                startDate: fieldErrors.startDate?.[0],
-                endDate: fieldErrors.endDate?.[0],
-                startTime: fieldErrors.startTime?.[0],
-                endTime: fieldErrors.endTime?.[0],
-                eventType: fieldErrors.eventType?.[0],
-                location: fieldErrors.location?.[0],
-                icon: fieldErrors.icon?.[0],
-                repeatType: fieldErrors.icon?.[0],
-                repeatOn: fieldErrors.icon?.[0]
-            })
+        const formDataObj = new FormData(form)
+        formDataObj.set('icon', icon)
+        formDataObj.set('startDate', selectedDate.toISOString().split('T')[0])
+
+        const raw = Object.fromEntries(formDataObj.entries()) as Record<string, string | string[]>
+        raw.startDate = selectedDate.toISOString().split('T')[0]
+        raw.repeatOn = formDataObj.getAll('repeatOn') as string[]
+
+        const validationErrors = await actions.validateBasicPlan(raw)
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors)
             return
         }
-        const data = new FormData()
-        Object.entries(raw).forEach(([key, val]) => {
-            if (!val) return;
 
-            if (Array.isArray(val)) {
-                val.forEach((item) => data.append(key, item));
-            } else {
-                data.append(key, val);
-            }
-        });
         try {
-            await actions.updateUserPlan(data, plan._id)
+            await actions.updateUserPlan(
+                formDataObj,
+                applyToAll && plan.recurringId ? plan.recurringId : plan._id,
+                applyToAll ? 'recurring' : 'instance'
+            )
         } catch (err) {
             console.error('Failed to update plan:', err)
         }
@@ -252,25 +233,29 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                             </label>
                         ))}
                         </div>
-                        <div className={`grid grid-cols-7 border rounded-md overflow-hidden max-w-full text-center 
-                        ${formData.repeatType !== 'custom' ? 'opacity-50 pointer-events-none' : ''
+                        <div className={`grid grid-cols-7 border rounded-md overflow-hidden
+                                 max-w-full text-center 
+                                ${formData.repeatType !== 'custom'
+                                ?
+                                'opacity-50 pointer-events-none' : ''
                             }`} >
                             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                                 <label key={day}
                                     className="cursor-pointer text-xs font-medium hover:bg-gray-700 transition-colors dark:bg-gray-800">
-                                    <input type="checkbox" name="repeatOn" value={day}
-                                        disabled={formData.repeatType !== 'custom'} checked={formData.repeatOn.includes(day)}
+                                    <input
+                                        type="checkbox"
+                                        name="repeatOn"
+                                        value={day}
+                                        disabled={formData.repeatType !== 'custom'}
+                                        checked={formData.repeatOn.includes(day)}
                                         onChange={() => handleCheckboxChange(day)}
-                                        className="sr-only peer" />
+                                        className="sr-only peer"
+                                    />
                                     <span className="peer-checked:bg-gray-400 peer-checked:text-white px-2 py-2 block">
                                         {day}
                                     </span>
                                 </label>
                             ))}
-                            {errors.repeatOn && (
-                                <p className="text-red-500 text-sm mt-1">{errors.repeatOn}</p>
-                            )}
-
                         </div>
                     </div>
                 </div>
@@ -317,6 +302,37 @@ export default function PlansEditForm({ plan }: { plan: Plan }) {
                     </div>
                 </div>
             </section>
+
+            {Boolean(plan.recurringId) && (
+                <div className="flex flex-col gap-2 mt-4">
+                    <label className="flex items-center gap-2 text-sm text-blue-500">
+                        <input
+                            type="checkbox"
+                            checked={applyToAll}
+                            onChange={(e) => setApplyToAll(e.target.checked)}
+                            className="accent-blue-600"
+                        />
+                        Apply changes to all recurring instances
+                    </label>
+
+                    <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-2 text-sm text-red-500">
+                            <input
+                                type="checkbox"
+                                checked={deleteAll}
+                                onChange={(e) => setDeleteAll(e.target.checked)}
+                                className="accent-red-500"
+                            />
+                            Delete all instances
+                        </label>
+                        <DeleteButton
+                            id={deleteAll ? plan.recurringId! : plan._id}
+                            isRecurring={deleteAll}
+                        />
+                    </div>
+                </div>
+            )}
+
             <button type="submit"
                 className="p-2 rounded-md border bg-blue-600 text-white hover:bg-blue-700 transition">
                 Update

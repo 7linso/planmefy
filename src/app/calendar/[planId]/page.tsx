@@ -11,7 +11,7 @@ export default async function PlanDetailedPage({ params }: { params: { planId: s
     if (!session) redirect('/')
 
     const { planId } = await params
-    const userPlan = await getUserPlansById(planId, session.user.id)
+    const userPlan = await getUserPlansById(planId)
     if (!userPlan) return notFound()
 
     return (<>

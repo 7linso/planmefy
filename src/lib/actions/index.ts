@@ -87,7 +87,43 @@ export async function getUserPlansByDate(date: Date) {
 
 }
 
-export async function getUserPlansById(id: string, userId: string) {
+export async function getUseRrecurringPlanById(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) throw new Error("Not authenticated")
+
+    const userId = session.user.id
+    const client = await clientPromise
+    const db = client.db('test')
+
+    let objectId: ObjectId
+    try {
+        objectId = new ObjectId(id)
+    } catch (err) {
+        console.warn('[Invalid ObjectId]', id)
+        return null
+    }
+
+    const plan = await db.collection('recurring_plans').findOne({
+        _id: objectId,
+        userId
+    })
+
+    if (!plan) {
+        console.warn('[Reccuring Plan not found]', { _id: id, userId })
+        return null
+    }
+    console.log(plan)
+    return {
+        repeatType: plan.repeatType ?? undefined,
+        repeatOn: plan.repeatOn ?? [],
+    }
+}
+
+export async function getUserPlansById(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) throw new Error("Not authenticated")
+
+    const userId = session.user.id
     const client = await clientPromise
     const db = client.db('test')
 
@@ -123,16 +159,19 @@ export async function getUserPlansById(id: string, userId: string) {
         eventType: plan.eventType ?? undefined,
         location: plan.location ?? undefined,
         icon: plan.icon ?? '',
+        repeatOn: Array.isArray(plan.repeatOn) ? plan.repeatOn : [],
         repeatType: plan.repeatType ?? undefined,
-        repeatOn: plan.repeatOn ?? [],
+        recurringId: plan.recurringId ? plan.recurringId.toString() : undefined
     }
 }
 
-type RecurringPlan = z.infer<typeof recurringPlanSchema>
-
 export async function postUserPlans(formData: FormData): Promise<void> {
+    type RecurringPlan = z.infer<typeof recurringPlanSchema>
+
     const session = await getServerSession(authOptions)
     if (!session?.user) throw new Error('Not authenticated')
+
+    const timezone = formData.get('timezone')?.toString() || 'UTC'
 
     const safeString = (v: FormDataEntryValue | null) =>
         typeof v === 'string' && v.trim() !== '' ? v : undefined
@@ -164,7 +203,6 @@ export async function postUserPlans(formData: FormData): Promise<void> {
     const data = parsed.data
     const userId = session.user.id
     const baseDate = new Date(data.startDate)
-
     const client = await clientPromise
     const db = client.db('test')
 
@@ -197,9 +235,14 @@ export async function postUserPlans(formData: FormData): Promise<void> {
         let currentDate = new Date(recurringData.startDate)
         let count = 0
 
+        const dayFormatter = new Intl.DateTimeFormat('en-US', {
+            weekday: 'short',
+            timeZone: timezone,
+        })
+
         while (instances.length < 30 && count < 365) {
+            const dayStr = dayFormatter.format(currentDate) // e.g. "Mon", "Tue"
             let include = false
-            const dayStr = currentDate.toLocaleDateString('en-US', { weekday: 'short' })
 
             if (recurringData.repeatType === 'every-day') include = true
             else if (recurringData.repeatType === 'every-week') include = true
@@ -297,7 +340,7 @@ export async function deleteUserPlan(id: string, targetType: 'instance' | 'recur
         if (targetType === 'instance') {
             const result = await db.collection('plan_instances').deleteOne({
                 _id,
-                userId: String(userId), 
+                userId: String(userId),
             })
 
             if (result.deletedCount === 0) {
@@ -324,11 +367,35 @@ export async function deleteUserPlan(id: string, targetType: 'instance' | 'recur
         }
 
         revalidatePath('/calendar')
+        redirect('/calendar')
     } catch (err) {
         console.error("Delete failed:", err)
         throw new Error("Failed to delete plan")
     }
 }
+
+function getLocalMidnight(date: Date): Date {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: tz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).formatToParts(date)
+
+    const y = Number(parts.find(p => p.type === 'year')?.value)
+    const m = Number(parts.find(p => p.type === 'month')?.value) - 1
+    const d = Number(parts.find(p => p.type === 'day')?.value)
+
+    return new Date(y, m, d) 
+}
+
+function getWeekdayString(date: Date): string {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    return new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: tz }).format(date)
+}
+  
 
 type TargetType = 'instance' | 'recurring'
 
@@ -379,21 +446,70 @@ export async function updateUserPlan(
             { _id, userId },
             { $set: data }
         )
-    } else {
-        await db.collection('plan_instances').updateOne(
-            { _id, userId },
-            {
-                $set: {
-                    ...data,
-                    isException: true,
-                },
-            }
-        )
-    }
 
+        const startEditDate = new Date(data.startDate)
+
+        await db.collection('plan_instances').deleteMany({
+            recurringId: _id,
+            userId,
+            startDate: { $gte: startEditDate.toISOString().split('T')[0] }
+        })
+
+        const recurringData = data as z.infer<typeof recurringPlanSchema>
+        const { repeatType, repeatOn } = recurringData
+
+        let currentDate = new Date(data.startDate)
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+        const instances: any[] = []
+        let count = 0
+
+        while (instances.length < 30 && count < 365) {
+            const localMidnight = getLocalMidnight(currentDate)
+            const dayStr = getWeekdayString(localMidnight)
+
+            let include = false
+            if (repeatType === 'every-day') include = true
+            else if (repeatType === 'every-week') include = true
+            else if (repeatType === 'every-month') include = true
+            else if (repeatType === 'custom' && repeatOn?.includes(dayStr)) include = true
+
+            if (include) {
+                instances.push({
+                    userId,
+                    recurringId: _id,
+                    title: data.title,
+                    note: data.note,
+                    startDate: localMidnight.toISOString().split('T')[0],
+                    endDate: data.endDate,
+                    startTime: data.startTime,
+                    endTime: data.endTime,
+                    eventType: data.eventType,
+                    location: data.location,
+                    icon: data.icon,
+                    created_at: new Date()
+                })
+            }
+
+            if (['every-day', 'custom'].includes(repeatType)) {
+                currentDate.setDate(currentDate.getDate() + 1)
+            } else if (repeatType === 'every-week') {
+                currentDate.setDate(currentDate.getDate() + 7)
+            } else if (repeatType === 'every-month') {
+                currentDate.setMonth(currentDate.getMonth() + 1)
+            }
+
+            count++
+        }
+
+
+        if (instances.length > 0) {
+            await db.collection('plan_instances').insertMany(instances)
+        }
+    }
     revalidatePath('/calendar')
     redirect('/calendar')
 }
+
 
 export async function getCoordsForLocation(location: string) {
     const key = process.env.MAPTILER_API_KEY
