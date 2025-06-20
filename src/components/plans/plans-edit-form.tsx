@@ -57,8 +57,13 @@ export default function PlansEditForm({ plan, targetType }: Props) {
     })
 
     useEffect(() => {
-        if (plan.startDate) setSelectedDate(new Date(plan.startDate))
+        if (plan.startDate) {
+            const [year, month, day] = plan.startDate.split('-').map(Number)
+            const localDate = new Date(year, month - 1, day)  
+            setSelectedDate(localDate)
+        }
     }, [plan.startDate, setSelectedDate])
+    
 
     useEffect(() => {
         const timeout = setTimeout(async () => {

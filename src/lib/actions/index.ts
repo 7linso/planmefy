@@ -388,14 +388,14 @@ function getLocalMidnight(date: Date): Date {
     const m = Number(parts.find(p => p.type === 'month')?.value) - 1
     const d = Number(parts.find(p => p.type === 'day')?.value)
 
-    return new Date(y, m, d) 
+    return new Date(y, m, d)
 }
 
 function getWeekdayString(date: Date): string {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     return new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: tz }).format(date)
 }
-  
+
 
 type TargetType = 'instance' | 'recurring'
 
@@ -446,7 +446,6 @@ export async function updateUserPlan(
             { _id, userId },
             { $set: data }
         )
-
         const startEditDate = new Date(data.startDate)
 
         await db.collection('plan_instances').deleteMany({
@@ -489,7 +488,6 @@ export async function updateUserPlan(
                     created_at: new Date()
                 })
             }
-
             if (['every-day', 'custom'].includes(repeatType)) {
                 currentDate.setDate(currentDate.getDate() + 1)
             } else if (repeatType === 'every-week') {
@@ -497,14 +495,16 @@ export async function updateUserPlan(
             } else if (repeatType === 'every-month') {
                 currentDate.setMonth(currentDate.getMonth() + 1)
             }
-
             count++
         }
-
-
         if (instances.length > 0) {
             await db.collection('plan_instances').insertMany(instances)
         }
+    } else {
+        await db.collection('plan_instances').updateOne(
+            { _id, userId },
+            { $set: data }
+        )
     }
     revalidatePath('/calendar')
     redirect('/calendar')
