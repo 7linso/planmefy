@@ -20,7 +20,7 @@ export default function CustomCalendar() {
     const yearLabel = actions.getYearLabel(currentDate)
 
     return (
-        <div className="border rounded-xl shadow p-4 m-10">
+        <div className="border rounded-xl shadow p-4 mb-4">
             <div className="flex justify-between items-center mb-4">
                 <button onClick={goToPrevMonth} className="text-lg">{'←'}</button>
                 <h2 className="text-xl font-bold">{monthLabel} {yearLabel}</h2>

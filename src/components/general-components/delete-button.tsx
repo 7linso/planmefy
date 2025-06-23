@@ -29,7 +29,7 @@ export default function DeleteButton({ id, isRecurring = false, deleteAll = fals
     return (
         <button
             type="button"
-            className="text-red-500 hover:text-red-700 transition-colors flex items-center gap-2"
+            className="text-red-500 hover:text-red-700 transition-colors flex items-center gap-2 pb-3"
             onClick={handleDelete}
         >
             <span className="material-symbols-outlined">delete</span>

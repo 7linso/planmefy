@@ -9,7 +9,7 @@ export default function Header() {
     const router = useRouter()
 
     return (<>
-        <nav className="flex justify-between items-center px-6 py-4 mx-10 sticky top-0">
+        <nav className="flex justify-between items-center px-4 py-2 sm:px-6 sm:py-3 lg:mx-10 sticky top-0">
             <Link href='/' className="text-2xl font-bold">
                 Planmefy
             </Link>
@@ -24,8 +24,7 @@ export default function Header() {
                                         router.push('/')
                                     })
                                 }
-                                className="flex items-center text-sm font-medium text-blue-300 dark:hover:text-blue-100 hover:text-blue-400 transition duration-200"
-                            >
+                                className="flex items-center text-sm font-medium text-blue-300 dark:hover:text-blue-100 hover:text-blue-400 transition duration-200">
                                 <span className="material-symbols-outlined text-3xl ml-2">
                                     account_circle_off
                                 </span>

@@ -34,7 +34,7 @@ export default function PlansList({ userPlans }: { userPlans: Plan[] }) {
                         </strong>
                         <div className="flex gap-2 ml-auto">
                             <EditButton id={plan._id} />
-                            <DeleteButton id={plan._id} targetType='instance'/>
+                            <DeleteButton id={plan._id}/>
                         </div>
                     </div>
                     <Link href={`/calendar/${plan._id}`} scroll={false}>
