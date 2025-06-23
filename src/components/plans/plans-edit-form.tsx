@@ -59,11 +59,11 @@ export default function PlansEditForm({ plan, targetType }: Props) {
     useEffect(() => {
         if (plan.startDate) {
             const [year, month, day] = plan.startDate.split('-').map(Number)
-            const localDate = new Date(year, month - 1, day)  
+            const localDate = new Date(year, month - 1, day)
             setSelectedDate(localDate)
         }
     }, [plan.startDate, setSelectedDate])
-    
+
 
     useEffect(() => {
         const timeout = setTimeout(async () => {
@@ -310,34 +310,34 @@ export default function PlansEditForm({ plan, targetType }: Props) {
 
             {Boolean(plan.recurringId) && (
                 <div className="flex flex-col gap-2 mt-4">
-                    <label className="flex items-center gap-2 text-sm text-blue-500">
+                    <label className="flex items-center gap-3 text-sm text-blue-500 cursor-pointer">
                         <input
                             type="checkbox"
                             checked={applyToAll}
                             onChange={(e) => setApplyToAll(e.target.checked)}
-                            className="accent-blue-600"
+                            className="peer hidden"
                         />
+                        <div className="w-5 h-5 rounded-md border-2 border-blue-500 flex items-center justify-center transition-colors peer-checked:bg-blue-500">
+                            <svg
+                                className="w-3 h-3 text-white hidden peer-checked:block"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="3"
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
                         Apply changes to all recurring instances
                     </label>
 
-                    <div className="flex items-center justify-between">
-                        <label className="flex items-center gap-2 text-sm text-red-500">
-                            <input
-                                type="checkbox"
-                                checked={deleteAll}
-                                onChange={(e) => setDeleteAll(e.target.checked)}
-                                className="accent-red-500"
-                            />
-                            Delete all instances
-                        </label>
-                        <DeleteButton
-                            id={deleteAll ? plan.recurringId! : plan._id}
-                            isRecurring={deleteAll}
-                        />
-                    </div>
+                    <DeleteButton
+                        id={plan.recurringId!}
+                        isRecurring={true}
+                        deleteAll={true}
+                    />
                 </div>
             )}
-
             <button type="submit"
                 className="p-2 rounded-md border bg-blue-600 text-white hover:bg-blue-700 transition">
                 Update

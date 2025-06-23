@@ -367,7 +367,6 @@ export async function deleteUserPlan(id: string, targetType: 'instance' | 'recur
         }
 
         revalidatePath('/calendar')
-        redirect('/calendar')
     } catch (err) {
         console.error("Delete failed:", err)
         throw new Error("Failed to delete plan")
@@ -509,7 +508,6 @@ export async function updateUserPlan(
     revalidatePath('/calendar')
     redirect('/calendar')
 }
-
 
 export async function getCoordsForLocation(location: string) {
     const key = process.env.MAPTILER_API_KEY

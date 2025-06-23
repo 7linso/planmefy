@@ -1,22 +1,24 @@
 'use client'
 
-import { useState } from 'react'
 import * as actions from '@/lib/actions'
 
 type Props = {
     id: string
     isRecurring?: boolean
+    deleteAll?: boolean
 }
 
-export default function DeleteButton({ id, isRecurring = false }: Props) {
-    const [deleteAll, setDeleteAll] = useState(false)
-
+export default function DeleteButton({ id, isRecurring = false, deleteAll = false }: Props) {
     const handleDelete = async () => {
-        const confirmed = confirm('Are you sure you want to delete this plan?')
+        const confirmed = confirm(
+            isRecurring && deleteAll
+                ? 'Are you sure you want to delete all recurring instances?'
+                : 'Are you sure you want to delete this plan?'
+        )
         if (!confirmed) return
 
         try {
-            await actions.deleteUserPlan(id, deleteAll && isRecurring ? 'recurring' : 'instance')
+            await actions.deleteUserPlan(id, isRecurring && deleteAll ? 'recurring' : 'instance')
             window.location.href = '/calendar'
         } catch (err) {
             console.error('Failed to delete plan:', err)
@@ -25,26 +27,15 @@ export default function DeleteButton({ id, isRecurring = false }: Props) {
     }
 
     return (
-        <div className="flex items-center gap-3">
-            {isRecurring && (
-                <>
-                    <input
-                        type="checkbox"
-                        checked={deleteAll}
-                        onChange={(e) => setDeleteAll(e.target.checked)}
-                        className="accent-red-500"
-                    />
-                    <span className="text-sm text-red-500">Delete all instances</span>
-                </>
+        <button
+            type="button"
+            className="text-red-500 hover:text-red-700 transition-colors flex items-center gap-2"
+            onClick={handleDelete}
+        >
+            <span className="material-symbols-outlined">delete</span>
+            {isRecurring && deleteAll && (
+                <span className="text-sm font-medium">Delete All Instances</span>
             )}
-
-            <button
-                type="button"
-                className="text-red-500 hover:text-red-700 transition-colors"
-                onClick={handleDelete}
-            >
-                <span className="material-symbols-outlined">delete</span>
-            </button>
-        </div>
+        </button>
     )
 }
